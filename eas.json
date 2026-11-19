@@ -1,0 +1,19 @@
+{
+  "cli": {
+    "version": ">= 12.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://zojaedvvdorfsnmwznnr.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_7ajOLrCKPVQaWwzRN4bt1w_AgVsgxn7",
+        "EXPO_PUBLIC_SUPPORT_WHATSAPP": "91XXXXXXXXXX"
+      }
+    }
+  }
+}
