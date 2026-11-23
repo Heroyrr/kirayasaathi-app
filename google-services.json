@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "98761511041",
+    "project_id": "kirayasaathi-4d939",
+    "storage_bucket": "kirayasaathi-4d939.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:98761511041:android:09c3dbeb4d096e18ac3d80",
+        "android_client_info": {
+          "package_name": "com.kirayasaathi.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAwps4bLolT6sNSMetHz0k6Ycij9EYlxBY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

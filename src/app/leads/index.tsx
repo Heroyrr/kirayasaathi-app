@@ -78,13 +78,15 @@ export default function LeadsScreen() {
           return (
             <Pressable key={l.id} onPress={() => router.push(`/leads/${l.id}` as any)}>
               <Card>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 }}>
                   <Avatar name={l.name} id={l.id} size={44} />
-                  <View style={{ flex: 1 }}>
-                    <T w="bold" size={14.5} numberOfLines={1}>{l.name}</T>
-                    {l.phone ? <T size={12} color={colors.muted}>+91 {l.phone}</T> : null}
+                  <View style={{ flex: 1, gap: 6 }}>
+                    <View>
+                      <T w="bold" size={14.5} numberOfLines={1}>{l.name}</T>
+                      {l.phone ? <T size={12} color={colors.muted}>+91 {l.phone}</T> : null}
+                    </View>
                     {leadProps(l).length ? (
-                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                         {leadProps(l).map((x) => (
                           <View key={x.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.line, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2 }}>
                             <Feather name="home" size={11} color={colors.muted} />
@@ -98,7 +100,7 @@ export default function LeadsScreen() {
                   <Badge label={t(st.key)} tone={st.tone} />
                 </View>
                 {l.next_action || l.next_action_at ? (
-                  <T size={12.5} color={colors.muted} style={{ marginTop: 8 }} numberOfLines={2}>
+                  <T size={12.5} color={colors.muted} style={{ marginTop: 10 }} numberOfLines={2}>
                     {t('nextOn')}: {l.next_action ?? ''}{l.next_action && l.next_action_at ? ' · ' : ''}{l.next_action_at ? showDate(l.next_action_at) : ''}
                   </T>
                 ) : null}

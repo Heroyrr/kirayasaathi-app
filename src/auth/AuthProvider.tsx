@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { appStorage } from '../utils/appStorage'
 import { api, ApiError, setToken, setUnauthorizedHandler } from '../api/client'
 import type { Subscription, User } from '../api/types'
+import { unregisterPush } from '../features/notifications/push'
 
 type Status = 'loading' | 'out' | 'in'
 type Ctx = {
@@ -96,6 +97,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = async () => {
+    // stop pushes for this owner on this phone (needs the login, so it runs before sign out)
+    try { await unregisterPush() } catch {}
     try { await api('/auth/logout', { method: 'POST' }) } catch {}
     await logoutLocal()
   }

@@ -31,3 +31,11 @@ Share the link it prints.
 
 Prices and limits: `src/utils/plans.ts` (shown in the app) and `_limits()` in `supabase/schema.sql` / `11_free_plan_limits.sql` (enforced). Keep them in step.
 The old phone OTP login is saved in `later/login-otp.tsx` for when SMS is added.
+
+---
+
+## Later parts (update check, push notifications, notices)
+
+Run in this order after `11_free_plan_limits.sql`: `12_app_config.sql`, `13_push_notifications.sql`, `14_notices.sql`.
+`13` needs two extensions and two Vault secrets first, and the Edge Function in `supabase/functions/send-push`.
+The full steps are in `docs/FIREBASE_PUSH_SETUP.md`.

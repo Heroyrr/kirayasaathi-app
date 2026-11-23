@@ -12,6 +12,7 @@ import { T } from '../../ui/AppText'
 import { Button } from '../../ui/Button'
 import { StatTile } from '../../ui/StatTile'
 import { SubscriptionBanner } from '../../ui/SubscriptionBanner'
+import { UpdateBanner } from '../../features/updates/UpdateBanner'
 import { inr } from '../../utils/format'
 import { daysFromToday, showDate } from '../../utils/dates'
 import type { Key } from '../../i18n/strings'
@@ -65,6 +66,7 @@ export default function Home() {
         </Card>
       ) : d ? (
         <>
+          <UpdateBanner />
           <SubscriptionBanner sub={d.subscription} />
 
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>

@@ -14,6 +14,31 @@
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_7ajOLrCKPVQaWwzRN4bt1w_AgVsgxn7",
         "EXPO_PUBLIC_SUPPORT_WHATSAPP": "918127804218",
         "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "AIzaSyAXQhn9MyUStmO3LUecQISCDgKQ6TaDJMc"
+      },
+      "autoIncrement": true
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://zojaedvvdorfsnmwznnr.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_7ajOLrCKPVQaWwzRN4bt1w_AgVsgxn7",
+        "EXPO_PUBLIC_SUPPORT_WHATSAPP": "918127804218",
+        "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "AIzaSyAXQhn9MyUStmO3LUecQISCDgKQ6TaDJMc"
+      }
+    },
+    "app-bundle": {
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://zojaedvvdorfsnmwznnr.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_7ajOLrCKPVQaWwzRN4bt1w_AgVsgxn7",
+        "EXPO_PUBLIC_SUPPORT_WHATSAPP": "918127804218",
+        "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "AIzaSyAXQhn9MyUStmO3LUecQISCDgKQ6TaDJMc"
       }
     }
   }

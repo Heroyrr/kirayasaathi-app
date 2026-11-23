@@ -11,6 +11,9 @@ import { SettingsProvider, useSettings } from '../settings/SettingsProvider'
 import { AuthProvider, useAuth } from '../auth/AuthProvider'
 import { fontAssets } from '../theme/fonts'
 import { AppAlertHost } from '../ui/AppAlert'
+import { UpdateProvider, useUpdate } from '../features/updates/UpdateProvider'
+import { ForceUpdateScreen } from '../features/updates/ForceUpdateScreen'
+import { PushSetup } from '../features/notifications/PushSetup'
 
 SplashScreen.preventAutoHideAsync()
 
@@ -22,6 +25,7 @@ function Gate() {
   const segments = useSegments()
   const router = useRouter()
   const dispatch = useAppDispatch()
+  const update = useUpdate()
   const appReady = fontsLoaded && ready && status !== 'loading'
 
   useEffect(() => {
@@ -40,10 +44,20 @@ function Gate() {
   }, [appReady, status, segments])
 
   if (!appReady) return null
+  // installed version is older than min_version in app_config: block the app until the owner updates
+  if (status === 'in' && update.state === 'forced') {
+    return (
+      <>
+        <StatusBar style="dark" />
+        <ForceUpdateScreen />
+      </>
+    )
+  }
   return (
     <>
       <StatusBar style="light" />
       <Stack screenOptions={{ headerShown: false }} />
+      {status === 'in' ? <PushSetup /> : null}
     </>
   )
 }
@@ -54,8 +68,10 @@ export default function RootLayout() {
       <Provider store={store}>
         <SettingsProvider>
           <AuthProvider>
-            <Gate />
-            <AppAlertHost />
+            <UpdateProvider>
+              <Gate />
+              <AppAlertHost />
+            </UpdateProvider>
           </AuthProvider>
         </SettingsProvider>
       </Provider>

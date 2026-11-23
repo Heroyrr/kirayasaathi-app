@@ -35,10 +35,10 @@ type Opts = { method?: string; body?: unknown; query?: Query; form?: FormData; a
 /* ------------------------------------------------------------------ test login (development) */
 // Test owner for development. It logs in WITHOUT any SMS provider (a hidden email + password account is used).
 // The OTP is only checked here in the app. To switch it off, set EXPO_PUBLIC_TEST_PHONE= (empty) in .env.
-// REMOVE BEFORE LAUNCH (see SUPABASE_SETUP.md).
-const TEST_PHONE = process.env.EXPO_PUBLIC_TEST_PHONE ?? '8299843647'
-const TEST_OTP = process.env.EXPO_PUBLIC_TEST_OTP ?? '123456'
-const TEST_PASSWORD = process.env.EXPO_PUBLIC_TEST_PASSWORD ?? 'OwnerTest#2026'
+// Switched off by default: all three EXPO_PUBLIC_TEST_* values are empty (also in eas.json).
+const TEST_PHONE = process.env.EXPO_PUBLIC_TEST_PHONE ?? ''
+const TEST_OTP = process.env.EXPO_PUBLIC_TEST_OTP ?? ''
+const TEST_PASSWORD = process.env.EXPO_PUBLIC_TEST_PASSWORD ?? ''
 // Supabase only accepts email domains that have real mail servers. No email is ever sent (Confirm email is off).
 const TEST_EMAIL_DOMAIN = process.env.EXPO_PUBLIC_TEST_EMAIL_DOMAIN ?? 'gmail.com'
 const testEmail = (digits: string) => `owner.test.${digits}@${TEST_EMAIL_DOMAIN}`
@@ -283,6 +283,12 @@ const ROUTES: [method: string, pattern: string, fn: string][] = [
 
   ['GET', '/complaints', 'api_get_complaints'], ['POST', '/complaints', 'api_add_complaint'],
   ['GET', '/complaints/:id', 'api_get_complaint'], ['PATCH', '/complaints/:id', 'api_update_complaint'],
+
+  ['GET', '/app-config', 'api_app_config'],
+  ['GET', '/notices', 'api_get_notices'],
+  ['GET', '/notifications', 'api_get_notifications'], ['POST', '/notifications/read', 'api_read_notifications'],
+  ['PUT', '/push-pref', 'api_set_push_pref'],
+  ['POST', '/push-token', 'api_register_push_token'], ['DELETE', '/push-token', 'api_remove_push_token'],
 
   ['GET', '/leads', 'api_get_leads'], ['POST', '/leads', 'api_add_lead'],
   ['GET', '/leads/:id', 'api_get_lead'], ['PATCH', '/leads/:id', 'api_update_lead'], ['DELETE', '/leads/:id', 'api_delete_lead'],

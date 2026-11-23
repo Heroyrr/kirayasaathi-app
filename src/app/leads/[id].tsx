@@ -20,7 +20,6 @@ import { showDate, toYmd } from '../../utils/dates'
 import { LEAD_STATUSES, leadStatusLook } from '../../utils/leadStatus'
 import { Loader } from '../../ui/Loader'
 import { MultiSelectField } from '../../ui/MultiSelectField'
-import { Badge } from '../../ui/Badge'
 import { useGetPropertiesQuery } from '../../store/api/properties'
 
 const stamp = (iso: string) => {
@@ -91,7 +90,6 @@ function LeadForm({ lead }: { lead: Lead }) {
           <View style={{ flex: 1, gap: 4 }}>
             <T w="bold" size={16}>{lead.name}</T>
             <T size={12.5} color={colors.muted}>{lead.phone ? `+91 ${lead.phone}` : '—'}</T>
-            {lead.source === 'roomindeed' ? <Badge label={t('fromRI')} tone="green" /> : null}
             {lead.phone ? (
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
                 <IconButton tint={colors.pri} onPress={() => Linking.openURL(`tel:${lead.phone}`)}>

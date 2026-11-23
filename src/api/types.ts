@@ -245,3 +245,14 @@ export type ComplaintRow = {
   notes?: ComplaintNote[] // only on the single call, newest first
 }
 export type ComplaintsResult = { counts: Record<ComplaintStatus, number> & { total: number }; complaints: ComplaintRow[] }
+
+export type AppNotification = { id: number; title: string; body: string; type: string; url: string | null; read: boolean; created_at: string }
+export type NotificationsResult = { push_enabled: boolean; unread: number; items: AppNotification[] }
+export type Notice = { id: number; title: string; body: string; screen: string | null; created_at: string }
+export type AppConfig = {
+  latest_version: string
+  min_version: string
+  apk_url: string | null
+  message_en: string | null
+  message_hi: string | null
+}

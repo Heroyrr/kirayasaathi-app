@@ -1,7 +1,7 @@
-import React from 'react'
-import { Pressable, View } from 'react-native'
+import React, { useCallback, useEffect, useState } from 'react'
+import { Linking, Pressable, Switch, View } from 'react-native'
 import { Alert } from '../../ui/AppAlert'
-import { useRouter } from 'expo-router'
+import { useFocusEffect, useRouter } from 'expo-router'
 import { Feather } from '@expo/vector-icons'
 import { useAuth } from '../../auth/AuthProvider'
 import { useSettings, type Mode } from '../../settings/SettingsProvider'
@@ -12,6 +12,8 @@ import { T } from '../../ui/AppText'
 import { Button } from '../../ui/Button'
 import { Badge } from '../../ui/Badge'
 import { fmtPhone } from '../../utils/format'
+import { useGetNotificationsQuery, useSetPushPrefMutation } from '../../store/api/notifications'
+import { enablePush, pushPermission, pushSupported, unregisterPush } from '../../features/notifications/push'
 import type { Key } from '../../i18n/strings'
 import type { Lang } from '../../i18n/strings'
 
@@ -40,18 +42,54 @@ const MENU: { key: Key; icon: keyof typeof Feather.glyphMap }[] = [
   { key: 'm6', icon: 'users' },
   { key: 'm1', icon: 'activity' },
   { key: 'm2', icon: 'tool' },
+  { key: 'm8', icon: 'bell' },
   { key: 'm7', icon: 'award' },
 ]
 
 export default function More() {
-  const { t, colors, lang, setLang, mode, setMode } = useSettings()
+  const { t, colors, lang, setLang, mode, setMode, errText } = useSettings()
   const { user, subscription, logout } = useAuth()
   const router = useRouter()
+
+  // ---- push notifications on/off (default ON) ----
+  const pref = useGetNotificationsQuery()
+  const [setPref] = useSetPushPrefMutation()
+  const [pushOn, setPushOn] = useState(true)
+  const [osOff, setOsOff] = useState(false) // allowed in the app, but blocked in the phone settings
+  useEffect(() => { if (pref.data) setPushOn(pref.data.push_enabled) }, [pref.data?.push_enabled])
+  const checkOs = useCallback(() => {
+    if (!pushSupported()) return setOsOff(false)
+    pushPermission().then((p) => setOsOff(p === 'blocked')).catch(() => {})
+  }, [])
+  useFocusEffect(checkOs)
+
+  const togglePush = async (on: boolean) => {
+    setPushOn(on)
+    try {
+      await setPref(on).unwrap()
+      if (on) {
+        const r = await enablePush() // system popup if needed + saves this phone
+        if (r === 'blocked') Alert.alert(t('ppBlockedT'), t('ppBlockedB'), [
+          { text: t('pushOpen'), onPress: () => { Linking.openSettings().catch(() => {}) } },
+          { text: t('ppLater'), style: 'cancel' },
+        ], { tone: 'warning', icon: 'bell-off' })
+        else if (r === 'unsupported') Alert.alert(t('pushT'), t('ppNoPhone'), undefined, { tone: 'info', icon: 'bell' })
+        checkOs()
+      } else {
+        await unregisterPush().catch(() => {})
+      }
+    } catch (e) {
+      setPushOn(!on) // could not save: put the switch back
+      Alert.alert(t('pushT'), errText(e), undefined, { tone: 'error' })
+    }
+  }
+
   const openMenu = (key: Key) => {
     if (key === 'm1') router.push('/meters' as any)
     else if (key === 'm0') router.push('/payments' as any)
     else if (key === 'm6') router.push('/leads' as any)
     else if (key === 'm2') router.push('/support' as any)
+    else if (key === 'm8') router.push('/notices' as any)
     else if (key === 'm7') router.push('/plans' as any)
     else Alert.alert(t(key), t('soon'))
   }
@@ -89,6 +127,26 @@ export default function More() {
           onChange={setMode}
           options={[{ v: 'light', label: t('light') }, { v: 'dark', label: t('dark') }, { v: 'system', label: t('sys') }]}
         />
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 16, paddingTop: 14, borderTopWidth: 1, borderTopColor: colors.line }}>
+          <Feather name="bell" size={19} color={colors.pri} />
+          <View style={{ flex: 1 }}>
+            <T w="medium" size={14.5}>{t('pushT')}</T>
+            <T size={12} color={colors.muted}>{t('pushH')}</T>
+          </View>
+          <Switch
+            value={pushOn}
+            onValueChange={togglePush}
+            trackColor={{ false: colors.line, true: colors.btn }}
+            thumbColor="#ffffff"
+          />
+        </View>
+        {pushOn && osOff ? (
+          <Pressable onPress={() => { Linking.openSettings().catch(() => {}) }} style={{ marginTop: 10, flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.amberbg, borderRadius: 10, padding: 10 }}>
+            <Feather name="alert-triangle" size={16} color={colors.amber} />
+            <T size={12.5} color={colors.amber} style={{ flex: 1 }}>{t('pushOsOff')}</T>
+            <T w="bold" size={12.5} color={colors.amber}>{t('pushOpen')}</T>
+          </Pressable>
+        ) : null}
       </Card>
 
       <Card style={{ paddingVertical: 4 }}>

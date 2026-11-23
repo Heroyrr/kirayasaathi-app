@@ -18,7 +18,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.easywebo.ownerapp"
+      "package": "com.kirayasaathi.app",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "server",
@@ -44,7 +45,23 @@
         {
           "locationAlwaysAndWhenInUsePermission": "KirayaSaathi uses your location only to mark where your property is."
         }
-      ]
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "KirayaSaathi needs your photos to attach tenant documents, meter readings and listing pictures.",
+          "cameraPermission": "KirayaSaathi needs the camera to take photos of tenant documents and meter readings."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#0F5C68",
+          "defaultChannel": "default"
+        }
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
