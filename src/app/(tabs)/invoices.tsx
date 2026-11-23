@@ -20,6 +20,7 @@ import { T } from '../../ui/AppText'
 import { TextField } from '../../ui/TextField'
 import { currentMonth, monthLabel, shiftMonth, showDate } from '../../utils/dates'
 import { inr } from '../../utils/format'
+import { Loader } from '../../ui/Loader'
 
 type InvFilter = 'all' | 'unpaid' | 'partial' | 'paid' | 'missing'
 
@@ -120,7 +121,7 @@ export default function InvoicesScreen() {
       </View>
 
       {loading ? (
-        <T color={colors.muted} style={{ textAlign: 'center', marginTop: 30 }}>{t('loading')}</T>
+        <Loader />
       ) : error ? (
         <Card>
           <T color={colors.red} style={{ marginBottom: 12 }}>{errText(error)}</T>

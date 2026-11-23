@@ -18,7 +18,7 @@ import { Screen } from '../../ui/Screen'
 import { MonthPicker } from '../../ui/MonthPicker'
 import { T } from '../../ui/AppText'
 import { TextField } from '../../ui/TextField'
-import { addDays, monthPeriodEnd, periodForMonth, todayYmd } from '../../utils/dates'
+import { addDays, monthPeriodEnd, periodForMonth, prorateRent, PRORATE_DAYS, todayYmd } from '../../utils/dates'
 import { cleanPhone, inr } from '../../utils/format'
 import type { Picked } from '../../utils/pickImage'
 
@@ -84,7 +84,9 @@ export default function NewTenant() {
   const [invRent, setInvRent] = useState('')
   const invStartEff = invStart || start
   const invEndEff = invEnd || monthPeriodEnd(invStartEff)
-  const invRentEff = invRent !== '' ? invRent : slot.rent !== undefined ? String(slot.rent) : ''
+  // a part of a month is charged as monthly rent / 30 x days (8000 / 30 x 14); a full rent month is the full rent
+  const pro = slot.rent !== undefined && invEndEff >= invStartEff ? prorateRent(slot.rent, invStartEff, invEndEff) : null
+  const invRentEff = invRent !== '' ? invRent : pro ? String(pro.amount) : slot.rent !== undefined ? String(slot.rent) : ''
   const invRentN = invRentEff.trim() === '' || Number.isNaN(Number(invRentEff)) ? null : Number(invRentEff)
   const invOk = !makeInv || (invRentN !== null && invRentN >= 0 && invEndEff >= invStartEff)
   const depositN = Number(deposit || 0) || 0
@@ -241,12 +243,17 @@ export default function NewTenant() {
             <MonthPicker
               label={t('invMonth')}
               value={invStartEff.slice(0, 7)}
-              onChange={(m) => { const p = periodForMonth(m, start); setInvStart(p.start); setInvEnd(p.end) }}
+              onChange={(m) => { const p = periodForMonth(m, start); setInvStart(p.start); setInvEnd(p.end); setInvRent('') }}
             />
             <T w="medium" size={12.5} color={colors.muted} style={{ marginBottom: 6 }}>{t('invPeriod')}</T>
-            <DateField label={t('fromDate')} value={invStartEff} onChange={setInvStart} />
-            <DateField label={t('toDate')} value={invEndEff} onChange={setInvEnd} minDate={invStartEff} />
+            <DateField label={t('fromDate')} value={invStartEff} onChange={(v) => { setInvStart(v); setInvRent('') }} />
+            <DateField label={t('toDate')} value={invEndEff} onChange={(v) => { setInvEnd(v); setInvRent('') }} minDate={invStartEff} />
             <TextField label={t('invRentL')} value={invRentEff} onChangeText={setInvRent} keyboardType="numeric" />
+            {pro && slot.rent !== undefined && invRentN === pro.amount ? (
+              <T w="semibold" size={13} color={pro.full ? colors.muted : colors.green} style={{ marginTop: -6, marginBottom: 10 }}>
+                {pro.full ? t('proFull') : t('proRent', { d: pro.days, m: inr(slot.rent), b: PRORATE_DAYS, r: inr(pro.amount) })}
+              </T>
+            ) : null}
             <View style={{ borderTopWidth: 1, borderTopColor: colors.line, paddingTop: 10, gap: 4 }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                 <T size={13} color={colors.muted}>{t('invTotalL')}{depositN > 0 ? ` (${t('invRentL').replace(/\s*\(.*$/, '')} + ${t('secDepName')})` : ''}</T>

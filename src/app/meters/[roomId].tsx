@@ -11,6 +11,7 @@ import { Card } from '../../ui/Card'
 import { EmptyState } from '../../ui/EmptyState'
 import { Screen } from '../../ui/Screen'
 import { T } from '../../ui/AppText'
+import { Loader } from '../../ui/Loader'
 
 const fmt = (n: number) => String(Math.round(n * 100) / 100)
 const stamp = (iso: string) => {
@@ -27,7 +28,7 @@ export default function ReadingHistory() {
   return (
     <Screen title={`${t('history')}${room ? ` · ${room}` : ''}`} sub={t('metersT')} back refreshing={q.isFetching} onRefresh={() => q.refetch()}>
       {q.isLoading ? (
-        <T color={colors.muted} style={{ textAlign: 'center', marginTop: 40 }}>{t('loading')}</T>
+        <Loader />
       ) : q.isError ? (
         <Card>
           <T color={colors.red} style={{ marginBottom: 12 }}>{errText(q.error)}</T>

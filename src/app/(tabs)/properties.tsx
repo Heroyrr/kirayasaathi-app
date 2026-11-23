@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo } from 'react'
 import { Pressable, View } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useGetBalancesQuery } from '../../store/api/billing'
 import { useGetPropertiesQuery } from '../../store/api/properties'
-import { AddPropertySheet } from '../../features/properties/sheets'
+import { Alert } from '../../ui/AppAlert'
+import { useGetHomeQuery } from '../../store/api/home'
 import { useSettings } from '../../settings/SettingsProvider'
 import { Badge } from '../../ui/Badge'
 import { Button } from '../../ui/Button'
@@ -14,13 +15,14 @@ import { ProgressBar } from '../../ui/ProgressBar'
 import { Screen } from '../../ui/Screen'
 import { T } from '../../ui/AppText'
 import { inr } from '../../utils/format'
+import { Loader } from '../../ui/Loader'
 
 export default function PropertiesList() {
   const { t, colors, errText } = useSettings()
   const router = useRouter()
-  const [adding, setAdding] = useState(false)
 
   const q = useGetPropertiesQuery()
+  const sub = useGetHomeQuery().data?.subscription
   // Dues per property come from the balances list (one row per booking)
   const dues = useGetBalancesQuery({ due: 'true' })
   const dueBy = useMemo(() => {
@@ -32,15 +34,28 @@ export default function PropertiesList() {
   const refresh = () => { q.refetch(); dues.refetch() }
   const open = (id: number) => router.push(`/property/${id}` as any)
 
+  // Free plan = 1 property. Say it here, with the way to upgrade, instead of letting the owner fill the form first.
+  // (The database enforces the same limit, this is only the friendly version.)
+  const addProperty = () => {
+    if (sub && sub.property_limit != null && sub.used_properties >= sub.property_limit) {
+      Alert.alert(t('error'), t('err_PROPERTY_LIMIT'), [
+        { text: t('cancel'), style: 'cancel' },
+        { text: t('choose'), onPress: () => router.push('/plans' as any) },
+      ], { tone: 'warning' })
+      return
+    }
+    router.push('/property/new' as any)
+  }
+
   return (
     <Screen
       title={t('props')}
       refreshing={q.isFetching}
       onRefresh={refresh}
-      fab={<Fab onPress={() => setAdding(true)} />}
+      fab={<Fab onPress={addProperty} />}
     >
       {q.isLoading ? (
-        <T color={colors.muted} style={{ textAlign: 'center', marginTop: 40 }}>{t('loading')}</T>
+        <Loader />
       ) : q.isError ? (
         <Card>
           <T color={colors.red} style={{ marginBottom: 12 }}>{errText(q.error)}</T>
@@ -57,7 +72,10 @@ export default function PropertiesList() {
               <Card>
                 <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                   <T w="bold" size={16} style={{ flex: 1 }} numberOfLines={1}>{p.name}</T>
-                  <Badge label={p.type === 'BED' ? t('bedT') : t('nonBedT')} tone="grey" />
+                  <View style={{ flexDirection: 'row', gap: 6 }}>
+                    <Badge label={p.is_live ? t('liveOn') : t('liveOff')} tone={p.is_live ? 'green' : 'amber'} />
+                    <Badge label={p.type === 'BED' ? t('bedT') : t('nonBedT')} tone="grey" />
+                  </View>
                 </View>
 
                 <View style={{ flexDirection: 'row', gap: 10, marginTop: 12 }}>
@@ -84,16 +102,6 @@ export default function PropertiesList() {
           )
         })
       )}
-
-      {adding ? (
-        <AddPropertySheet
-          onClose={() => setAdding(false)}
-          onDone={(id) => {
-            setAdding(false)
-            open(id)
-          }}
-        />
-      ) : null}
     </Screen>
   )
 }

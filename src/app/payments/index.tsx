@@ -19,6 +19,7 @@ import { T } from '../../ui/AppText'
 import { TextField } from '../../ui/TextField'
 import { currentMonth, monthLabel, shiftMonth, showDate } from '../../utils/dates'
 import { inr } from '../../utils/format'
+import { Loader } from '../../ui/Loader'
 
 type Mode = 'all' | 'cash' | 'upi' | 'bank'
 
@@ -80,7 +81,7 @@ export default function Payments() {
       </View>
 
       {q.isLoading ? (
-        <T color={colors.muted} style={{ textAlign: 'center', marginTop: 30 }}>{t('loading')}</T>
+        <Loader />
       ) : q.isError ? (
         <Card>
           <T color={colors.red} style={{ marginBottom: 12 }}>{errText(q.error)}</T>

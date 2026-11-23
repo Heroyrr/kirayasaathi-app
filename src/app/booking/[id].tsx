@@ -21,6 +21,7 @@ import { Screen } from '../../ui/Screen'
 import { T } from '../../ui/AppText'
 import { showDate } from '../../utils/dates'
 import { inr } from '../../utils/format'
+import { Loader } from '../../ui/Loader'
 
 type Sheet = 'edit' | 'notice' | 'moveOut' | 'transfer' | null
 
@@ -85,7 +86,7 @@ export default function BookingDetail() {
       onRefresh={() => { q.refetch(); ledger.refetch() }}
     >
       {q.isLoading ? (
-        <T color={colors.muted} style={{ textAlign: 'center', marginTop: 40 }}>{t('loading')}</T>
+        <Loader />
       ) : q.isError || !b || !look ? (
         <Card>
           <T color={colors.red} style={{ marginBottom: 12 }}>{errText(q.error)}</T>

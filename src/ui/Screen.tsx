@@ -40,10 +40,12 @@ type Props = {
   refreshing?: boolean
   onRefresh?: () => void
   fab?: React.ReactNode
+  /** lets a screen scroll itself back to the top (for example when a form moves to its next step) */
+  scrollRef?: React.Ref<ScrollView>
 }
 
 /** Teal header band with the content sheet sliding over it, like the design */
-export function Screen({ title, sub, children, scroll = true, back, refreshing, onRefresh, fab }: Props) {
+export function Screen({ title, sub, children, scroll = true, back, refreshing, onRefresh, fab, scrollRef }: Props) {
   const { colors } = useSettings()
   const insets = useSafeAreaInsets()
   const router = useRouter()
@@ -70,6 +72,7 @@ export function Screen({ title, sub, children, scroll = true, back, refreshing, 
       <View style={{ flex: 1, marginTop: -16, borderTopLeftRadius: 22, borderTopRightRadius: 22, backgroundColor: colors.bg, overflow: 'hidden' }}>
         {scroll ? (
           <ScrollView
+            ref={scrollRef}
             contentContainerStyle={{ padding: 14, paddingBottom: 90 }}
             keyboardShouldPersistTaps="handled"
             refreshControl={onRefresh ? <RefreshControl refreshing={!!refreshing} onRefresh={onRefresh} tintColor={colors.pri} /> : undefined}

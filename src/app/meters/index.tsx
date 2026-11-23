@@ -18,6 +18,7 @@ import { Screen } from '../../ui/Screen'
 import { Sheet } from '../../ui/Sheet'
 import { T } from '../../ui/AppText'
 import { TextField } from '../../ui/TextField'
+import { Loader } from '../../ui/Loader'
 
 const fmt = (n: number) => String(Math.round(n * 100) / 100)
 
@@ -108,7 +109,7 @@ export default function Meters() {
       ) : null}
 
       {props.isLoading || q.isLoading ? (
-        <T color={colors.muted} style={{ textAlign: 'center', marginTop: 40 }}>{t('loading')}</T>
+        <Loader />
       ) : props.data && props.data.length === 0 ? (
         <EmptyState icon="office-building-outline" title={t('noProps')} sub={t('noPropsH')} />
       ) : q.isError ? (

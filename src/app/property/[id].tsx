@@ -14,6 +14,8 @@ import { Screen } from '../../ui/Screen'
 import { StatTile } from '../../ui/StatTile'
 import { T } from '../../ui/AppText'
 import { inr } from '../../utils/format'
+import { Loader } from '../../ui/Loader'
+import { Badge } from '../../ui/Badge'
 
 type Sheet =
   | { kind: 'addCat' }
@@ -65,13 +67,13 @@ export default function PropertyDetailScreen() {
   return (
     <Screen
       title={p?.name ?? t('props')}
-      sub={p ? `${p.type === 'BED' ? t('bedT') : t('nonBedT')}${p.address ? ` · ${p.address}` : ''}` : undefined}
+      sub={p ? `${p.type === 'BED' ? t('bedT') : t('nonBedT')}${p.locality ? ` · ${p.locality}${p.city ? `, ${p.city}` : ''}` : ''}` : undefined}
       back
       refreshing={q.isFetching}
       onRefresh={() => q.refetch()}
     >
       {q.isLoading ? (
-        <T color={colors.muted} style={{ textAlign: 'center', marginTop: 40 }}>{t('loading')}</T>
+        <Loader />
       ) : q.isError || !p ? (
         <Card>
           <T color={colors.red} style={{ marginBottom: 12 }}>{errText(q.error)}</T>
@@ -79,6 +81,19 @@ export default function PropertyDetailScreen() {
         </Card>
       ) : (
         <>
+          <Card>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <T w="bold" size={15} style={{ flex: 1 }}>{t('liveT')}</T>
+              <Badge label={p.is_live ? t('liveOn') : t('liveOff')} tone={p.is_live ? 'green' : 'amber'} />
+            </View>
+            {!p.is_live ? <T size={12.5} color={colors.muted} style={{ marginTop: 6, marginBottom: 4 }}>{t('liveHint')}</T> : <View style={{ height: 8 }} />}
+            <Button
+              title={p.is_live ? t('editListing') : t('goLive')}
+              variant={p.is_live ? 'ghost' : 'primary'}
+              onPress={() => router.push(`/property/listing?id=${p.id}` as any)}
+            />
+          </Card>
+
           <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
             <StatTile compact tone="grey" label={t('units')} value={String(p.units)} />
             <StatTile compact tone="green" label={t('occupied')} value={String(p.occupied)} />

@@ -25,6 +25,7 @@ export type HomeData = {
   reminders: {
     leads: { id: number; name: string; phone: string | null; next_action: string | null; next_action_at: string | null }[]
     complaints: { id: number; service: string; remind_at: string | null; property?: { id: number; name: string } }[]
+    notices: { booking_id: number; tenant_id: number; tenant_name: string; property_name: string; room_no: string; bed_label: string | null; leave_date: string; notice_date: string | null }[]
   }
   subscription: Subscription
 }
@@ -37,6 +38,22 @@ export type Property = {
   units: number
   occupied: number
   vacant: number
+  // RoomIndeed listing
+  is_live: boolean
+  live_at: string | null
+  min_rent: number | null
+  security_deposit: number | null
+  amenities: string[]
+  unit_types: string[]
+  photo_keys: string[]
+  // location (asked in the Live flow, not when the property is created)
+  pincode: string | null
+  state: string | null
+  city: string | null
+  locality: string | null
+  landmark: string | null
+  lat: number | null
+  lng: number | null
 }
 export type LiveBooking = { booking_id: number; status: string; tenant_id: number; tenant_name: string }
 export type BedInfo = { id: number; label: string; occupied: boolean; booking: LiveBooking | null }
@@ -88,6 +105,8 @@ export type LiveSummary = {
   property_name?: string
   room_no?: string
   bed_label: string | null
+  notice_date?: string | null
+  leave_date?: string | null
   balance: number
   agreement_done: boolean
 }
@@ -193,6 +212,8 @@ export type Lead = {
   phone: string | null
   property_id: number | null
   property: { id: number; name: string } | null
+  properties: { id: number; name: string }[] // every property the lead asked about
+  source?: 'app' | 'roomindeed'
   note: string | null
   status: LeadStatus
   last_talk: string | null

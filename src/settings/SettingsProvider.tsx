@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { useColorScheme } from 'react-native'
-import * as SecureStore from 'expo-secure-store'
+import { appStorage } from '../utils/appStorage'
 import { dark, light, type Colors } from '../theme/tokens'
 import { familyFor, type Weight } from '../theme/fonts'
 import { strings, type Key, type Lang } from '../i18n/strings'
@@ -32,8 +32,8 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     ;(async () => {
       try {
-        const l = await SecureStore.getItemAsync('oa_lang')
-        const m = await SecureStore.getItemAsync('oa_theme')
+        const l = await appStorage.get('oa_lang')
+        const m = await appStorage.get('oa_theme')
         if (l === 'en' || l === 'hi') setLangState(l)
         if (m === 'light' || m === 'dark' || m === 'system') setModeState(m)
       } catch {}
@@ -43,11 +43,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const setLang = useCallback((l: Lang) => {
     setLangState(l)
-    SecureStore.setItemAsync('oa_lang', l).catch(() => {})
+    appStorage.set('oa_lang', l).catch(() => {})
   }, [])
   const setMode = useCallback((m: Mode) => {
     setModeState(m)
-    SecureStore.setItemAsync('oa_theme', m).catch(() => {})
+    appStorage.set('oa_theme', m).catch(() => {})
   }, [])
 
   const value = useMemo<Ctx>(() => {

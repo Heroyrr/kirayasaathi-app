@@ -11,7 +11,7 @@ import { Screen } from '../ui/Screen'
 import { T } from '../ui/AppText'
 import { showDate, toYmd } from '../utils/dates'
 import { inr } from '../utils/format'
-import { PLANS, SUPPORT_WHATSAPP } from '../utils/plans'
+import { CUSTOM_PLAN, PLANS, SUPPORT_WHATSAPP } from '../utils/plans'
 
 function Bar({ used, limit }: { used: number; limit: number | null | undefined }) {
   const { colors } = useSettings()
@@ -24,7 +24,7 @@ function Bar({ used, limit }: { used: number; limit: number | null | undefined }
 }
 
 export default function PlansScreen() {
-  const { t, colors } = useSettings()
+  const { t, colors, lang } = useSettings()
   const { user, subscription: s } = useAuth()
 
   const stateLook = s?.state === 'view_only' ? { key: 'stView', tone: 'red' as const } : s?.state === 'grace' ? { key: 'stGrace', tone: 'amber' as const } : { key: 'planActive', tone: 'green' as const }
@@ -95,10 +95,41 @@ export default function PlansScreen() {
                   </View>
                 ))}
               </View>
+              <T size={12.5} color={colors.muted} style={{ marginTop: 12, marginBottom: 4 }}>{p.why[lang]}</T>
+              <View style={{ gap: 6, marginTop: 6 }}>
+                {p.features.map((f) => (
+                  <View key={f.en} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Feather name="check" size={16} color={colors.green} />
+                    <T size={13.5} style={{ flex: 1 }}>{f[lang]}</T>
+                  </View>
+                ))}
+              </View>
             </Card>
           </View>
         )
       })}
+
+      <View style={{ marginBottom: 12 }}>
+        <Card>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <T w="bold" size={17}>{CUSTOM_PLAN.name}</T>
+            <Badge label={lang === 'hi' ? 'आपके लिए' : 'Made for you'} tone="amber" />
+          </View>
+          <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 6, marginTop: 6 }}>
+            <T w="bold" size={24}>₹{CUSTOM_PLAN.price}</T>
+            <T size={13} color={colors.muted}>{t('perMo')}</T>
+          </View>
+          <T size={12.5} color={colors.muted} style={{ marginTop: 8 }}>{CUSTOM_PLAN.why[lang]}</T>
+          <View style={{ gap: 6, marginTop: 10 }}>
+            {CUSTOM_PLAN.features.map((f) => (
+              <View key={f.en} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Feather name="plus-circle" size={16} color={colors.pri} />
+                <T size={13.5} style={{ flex: 1 }}>{f[lang]}</T>
+              </View>
+            ))}
+          </View>
+        </Card>
+      </View>
 
       <Button title={t('planContact')} onPress={contact} />
       <T size={12} color={colors.muted} style={{ textAlign: 'center', marginTop: 12 }}>{t('planFoot')}</T>

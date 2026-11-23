@@ -16,6 +16,8 @@ import { Screen } from '../../ui/Screen'
 import { T } from '../../ui/AppText'
 import { TextField } from '../../ui/TextField'
 import { inr } from '../../utils/format'
+import { Loader } from '../../ui/Loader'
+import { NoticeInfo } from '../../features/bookings/NoticeInfo'
 
 type Filter = 'all' | 'staying' | 'out' | 'notice'
 
@@ -71,7 +73,7 @@ export default function TenantsList() {
       </View>
 
       {q.isLoading ? (
-        <T color={colors.muted} style={{ textAlign: 'center', marginTop: 30 }}>{t('loading')}</T>
+        <Loader />
       ) : q.isError ? (
         <Card>
           <T color={colors.red} style={{ marginBottom: 12 }}>{errText(q.error)}</T>
@@ -107,13 +109,16 @@ export default function TenantsList() {
                 {live.map((b) => {
                   const look = statusLook(b.status)
                   return (
-                    <View key={b.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 10, padding: 10, borderRadius: 10, backgroundColor: colors.bg }}>
-                      <MaterialCommunityIcons name="door-open" size={22} color={colors.pri} />
-                      <View style={{ flex: 1 }}>
-                        <T w="semibold" size={14} numberOfLines={1}>{b.property_name}</T>
-                        <T size={13}>{t('room')} {b.room_no}{b.bed_label ? ` · ${t('bed')} ${b.bed_label}` : ''}</T>
+                    <View key={b.id} style={{ marginTop: 10, padding: 10, borderRadius: 10, backgroundColor: colors.bg }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <MaterialCommunityIcons name="door-open" size={22} color={colors.pri} />
+                        <View style={{ flex: 1 }}>
+                          <T w="semibold" size={14} numberOfLines={1}>{b.property_name}</T>
+                          <T size={13}>{t('room')} {b.room_no}{b.bed_label ? ` · ${t('bed')} ${b.bed_label}` : ''}</T>
+                        </View>
+                        <Badge label={t(look.key)} tone={look.tone} />
                       </View>
-                      <Badge label={t(look.key)} tone={look.tone} />
+                      {b.status === 'notice' ? <NoticeInfo noticeDate={b.notice_date} leaveDate={b.leave_date} /> : null}
                     </View>
                   )
                 })}

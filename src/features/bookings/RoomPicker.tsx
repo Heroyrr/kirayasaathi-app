@@ -6,6 +6,7 @@ import { Chip } from '../../ui/Chip'
 import { SelectField } from '../../ui/SelectField'
 import { T } from '../../ui/AppText'
 import { inr } from '../../utils/format'
+import { Loader } from '../../ui/Loader'
 
 export type Slot = {
   propertyId?: number
@@ -57,7 +58,7 @@ export function RoomPicker({ value, onChange, want = 'vacant' }: { value: Slot; 
         <T w="semibold" size={14} style={{ marginBottom: 10 }}>{props.data[0].name}</T>
       ) : null}
 
-      {detail.isFetching && !p ? <T color={colors.muted}>{t('loading')}</T> : null}
+      {detail.isFetching && !p ? <Loader inline /> : null}
 
       {p?.categories.map((c) => {
         const rooms = c.rooms

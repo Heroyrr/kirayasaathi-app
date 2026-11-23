@@ -33,6 +33,8 @@ import { T } from '../../ui/AppText'
 import { showDate } from '../../utils/dates'
 import { inr } from '../../utils/format'
 import type { PaymentRow } from '../../api/types'
+import { Loader } from '../../ui/Loader'
+import { NoticeInfo } from '../../features/bookings/NoticeInfo'
 
 function DocRow({ label, doc, onView, onUpload, onRemove }: {
   label: string; doc?: Doc; onView: () => void; onUpload: () => void; onRemove?: () => void
@@ -157,7 +159,7 @@ export default function TenantDetail() {
   return (
     <Screen title={tenant?.name ?? t('tenants')} sub={tenant?.phone ? `+91 ${tenant.phone}` : undefined} back refreshing={q.isFetching && !q.isLoading} onRefresh={() => { q.refetch(); invs.refetch(); pays.refetch() }}>
       {q.isLoading ? (
-        <T color={colors.muted} style={{ textAlign: 'center', marginTop: 40 }}>{t('loading')}</T>
+        <Loader />
       ) : q.isError || !tenant ? (
         <Card>
           <T color={colors.red} style={{ marginBottom: 12 }}>{errText(q.error)}</T>
@@ -227,6 +229,7 @@ export default function TenantDetail() {
                       <View style={{ flex: 1 }}>
                         <T w="semibold" size={13.5} numberOfLines={1}>{b.property?.name}</T>
                         <T size={12.5}>{roomOf(b)}</T>
+                        {b.status === 'notice' ? <NoticeInfo noticeDate={b.notice_date} leaveDate={b.leave_date} /> : null}
                       </View>
                       <View style={{ alignItems: 'flex-end', gap: 3 }}>
                         <Badge label={t(look.key)} tone={look.tone} />

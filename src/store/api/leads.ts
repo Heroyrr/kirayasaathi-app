@@ -5,6 +5,7 @@ type LeadBody = {
   name?: string
   phone?: string
   property_id?: number | null
+  property_ids?: number[] // all properties of the lead (replaces the old list)
   note?: string
   status?: LeadStatus
   last_talk?: string
@@ -23,7 +24,7 @@ export const leadsApi = baseApi.injectEndpoints({
       query: (id) => ({ url: `/leads/${id}` }),
       providesTags: (_r, _e, id) => [{ type: 'Lead', id: String(id) }],
     }),
-    addLead: builder.mutation<{ id: number }, Required<Pick<LeadBody, 'name' | 'phone'>> & Pick<LeadBody, 'property_id' | 'note'>>({
+    addLead: builder.mutation<{ id: number }, Required<Pick<LeadBody, 'name' | 'phone'>> & Pick<LeadBody, 'property_ids' | 'note'>>({
       query: (body) => ({ url: '/leads', method: 'POST', body }),
       invalidatesTags: ['Leads', 'Home'],
     }),

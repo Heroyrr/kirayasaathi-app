@@ -3,7 +3,7 @@ import { Pressable, View } from 'react-native'
 import { Alert } from '../../ui/AppAlert'
 import { Feather } from '@expo/vector-icons'
 import {
-  useAddBedMutation, useAddCategoryMutation, useAddPropertyMutation, useAddRoomMutation, useDeleteBedMutation,
+  useAddBedMutation, useAddCategoryMutation, useAddRoomMutation, useDeleteBedMutation,
   useDeletePropertyMutation, useDeleteRoomMutation, useUpdateCategoryMutation, useUpdatePropertyMutation,
 } from '../../store/api/properties'
 import type { CategoryInfo, RoomInfo } from '../../api/types'
@@ -12,12 +12,11 @@ import { useSettings } from '../../settings/SettingsProvider'
 import { Badge } from '../../ui/Badge'
 import { Button } from '../../ui/Button'
 import { Chip } from '../../ui/Chip'
-import { Segmented } from '../../ui/Segmented'
 import { Sheet } from '../../ui/Sheet'
 import { T } from '../../ui/AppText'
 import { TextField } from '../../ui/TextField'
 
-type PType = 'BED' | 'NON_BED'
+export type PType = 'BED' | 'NON_BED'
 const isNum = (v: string) => v.trim() !== '' && !Number.isNaN(Number(v))
 
 /** Ask first, then run. Used for every remove or delete. */
@@ -26,71 +25,6 @@ function confirm(title: string, message: string | undefined, yes: string, no: st
     { text: no, style: 'cancel' },
     { text: yes, style: 'destructive', onPress: onYes },
   ])
-}
-
-/* ------------------------------------------------------------------ Add property (+ first category) */
-export function AddPropertySheet({ onClose, onDone }: { onClose: () => void; onDone: (propertyId: number) => void }) {
-  const { t, colors, errText } = useSettings()
-  const { busy, run } = useAction()
-  const [addProperty] = useAddPropertyMutation()
-  const [addCategory] = useAddCategoryMutation()
-  const [name, setName] = useState('')
-  const [address, setAddress] = useState('')
-  const [type, setType] = useState<PType>('NON_BED')
-  const [catName, setCatName] = useState('')
-  const [rent, setRent] = useState('')
-  const [beds, setBeds] = useState('3')
-  const [rooms, setRooms] = useState('')
-
-  const wantCat = catName.trim() !== '' || rent.trim() !== '' || rooms.trim() !== ''
-  const bedsOk = type === 'NON_BED' || (Number(beds) >= 1 && Number(beds) <= 26)
-  const catOk = !wantCat || (catName.trim() !== '' && isNum(rent) && rooms.trim() !== '' && bedsOk)
-  const valid = name.trim() !== '' && catOk
-
-  async function submit() {
-    const r = await run(async () => {
-      const prop = await addProperty({ name: name.trim(), type, ...(address.trim() ? { address: address.trim() } : {}) }).unwrap()
-      let catError = ''
-      if (wantCat) {
-        try {
-          await addCategory({
-            propertyId: prop.id, name: catName.trim(), rent: Number(rent), rooms: rooms.trim(),
-            ...(type === 'BED' ? { beds_per_room: Number(beds) } : {}),
-          }).unwrap()
-        } catch (e) {
-          catError = errText(e)
-        }
-      }
-      return { id: prop.id, catError }
-    })
-    if (r.ok) {
-      if (r.data.catError) Alert.alert(t('error'), t('catPartial') + r.data.catError, undefined, { tone: 'warning' })
-      onDone(r.data.id)
-    }
-  }
-
-  return (
-    <Sheet title={t('addProp')} onClose={onClose}>
-      <TextField label={t('propName')} value={name} onChangeText={setName} autoCapitalize="words" />
-      <TextField label={t('address')} value={address} onChangeText={setAddress} />
-      <T w="medium" size={12.5} color={colors.muted} style={{ marginBottom: 6 }}>{t('ptype')}</T>
-      <Segmented<PType>
-        value={type}
-        onChange={setType}
-        options={[{ v: 'NON_BED', label: t('pNonT') }, { v: 'BED', label: t('pBedT') }]}
-      />
-      <T size={12} color={colors.muted} style={{ marginTop: 6, marginBottom: 14 }}>{type === 'BED' ? t('pBedH') : t('pNonH')}</T>
-
-      <T w="bold" size={14} style={{ marginBottom: 8 }}>{t('firstCat')}</T>
-      <TextField label={t('catName')} value={catName} onChangeText={setCatName} />
-      <TextField label={t('rent')} value={rent} onChangeText={setRent} keyboardType="numeric" />
-      {type === 'BED' ? <TextField label={t('bedsPer')} value={beds} onChangeText={setBeds} keyboardType="number-pad" maxLength={2} /> : null}
-      <TextField label={t('roomNos')} value={rooms} onChangeText={setRooms} placeholder="101-110" autoCapitalize="characters" />
-      <T size={12} color={colors.muted} style={{ marginTop: -6, marginBottom: 14 }}>{t('roomNosH')}</T>
-
-      <Button title={t('create')} onPress={submit} loading={busy} disabled={!valid} />
-    </Sheet>
-  )
 }
 
 /* ------------------------------------------------------------------ Add or edit a category */
@@ -233,16 +167,15 @@ export function RoomSheet({
 /* ------------------------------------------------------------------ Edit or delete the property */
 export function EditPropertySheet({
   property, onClose, onDone, onDeleted,
-}: { property: { id: number; name: string; address: string | null }; onClose: () => void; onDone: () => void; onDeleted: () => void }) {
+}: { property: { id: number; name: string }; onClose: () => void; onDone: () => void; onDeleted: () => void }) {
   const { t } = useSettings()
   const { busy, run } = useAction()
   const [updateProperty] = useUpdatePropertyMutation()
   const [deleteProperty] = useDeletePropertyMutation()
   const [name, setName] = useState(property.name)
-  const [address, setAddress] = useState(property.address ?? '')
 
   async function submit() {
-    const r = await run(() => updateProperty({ id: property.id, name: name.trim(), address: address.trim() }).unwrap())
+    const r = await run(() => updateProperty({ id: property.id, name: name.trim() }).unwrap())
     if (r.ok) onDone()
   }
 
@@ -258,7 +191,6 @@ export function EditPropertySheet({
   return (
     <Sheet title={t('editProp')} onClose={onClose}>
       <TextField label={t('propName')} value={name} onChangeText={setName} autoCapitalize="words" />
-      <TextField label={t('address')} value={address} onChangeText={setAddress} />
       <Button title={t('save')} onPress={submit} loading={busy} disabled={name.trim() === ''} />
       <View style={{ height: 14 }} />
       <Button title={t('delProp')} variant="danger" onPress={del} disabled={busy} />

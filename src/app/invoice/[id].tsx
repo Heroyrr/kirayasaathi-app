@@ -17,6 +17,7 @@ import { Screen } from '../../ui/Screen'
 import { T } from '../../ui/AppText'
 import { showDate } from '../../utils/dates'
 import { inr } from '../../utils/format'
+import { Loader } from '../../ui/Loader'
 
 export default function InvoiceDetail() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -41,7 +42,7 @@ export default function InvoiceDetail() {
   return (
     <Screen title={inv?.number ?? t('invNo')} sub={inv?.booking.tenant?.name} back refreshing={q.isFetching && !q.isLoading} onRefresh={() => q.refetch()}>
       {q.isLoading ? (
-        <T color={colors.muted} style={{ textAlign: 'center', marginTop: 40 }}>{t('loading')}</T>
+        <Loader />
       ) : q.isError || !inv || !st ? (
         <Card>
           <T color={colors.red} style={{ marginBottom: 12 }}>{errText(q.error)}</T>

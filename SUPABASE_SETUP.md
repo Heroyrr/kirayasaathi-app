@@ -2,7 +2,7 @@
 
 ## 1. Database
 Supabase > SQL Editor > New query > paste `supabase/schema.sql` > Run.
-(Already ran an older version? Run only the missing parts in order: `04_update.sql`, `05_lead_history.sql`, `06_support.sql`, `07_email_admin.sql`, `08_notice_update.sql`.)
+(Already ran an older version? Run only the missing parts in order: `04_update.sql`, `05_lead_history.sql`, `06_support.sql`, `07_email_admin.sql`, `08_notice_update.sql`, `09_roomindeed_live.sql`, `10_location.sql`, `11_free_plan_limits.sql`.)
 
 ## 2. Login settings (Authentication > Sign In / Providers)
 - Email: turn ON. "Confirm email" can stay OFF.
@@ -29,5 +29,5 @@ Put your Supabase URL, anon key and the team WhatsApp number in `.env` (and in `
     eas build -p android --profile preview
 Share the link it prints.
 
-Prices and limits: `src/utils/plans.ts` (shown in the app) and `_limits()` in `supabase/02_helpers.sql` (enforced). Keep them in step.
+Prices and limits: `src/utils/plans.ts` (shown in the app) and `_limits()` in `supabase/schema.sql` / `11_free_plan_limits.sql` (enforced). Keep them in step.
 The old phone OTP login is saved in `later/login-otp.tsx` for when SMS is added.

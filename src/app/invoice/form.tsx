@@ -20,8 +20,9 @@ import { MonthPicker } from '../../ui/MonthPicker'
 import { Screen } from '../../ui/Screen'
 import { T } from '../../ui/AppText'
 import { TextField } from '../../ui/TextField'
-import { addDays, monthPeriodEnd, periodForMonth, todayYmd } from '../../utils/dates'
+import { addDays, monthPeriodEnd, periodForMonth, prorateRent, PRORATE_DAYS, todayYmd } from '../../utils/dates'
 import { inr } from '../../utils/format'
+import { Loader } from '../../ui/Loader'
 
 const num = (s: string) => (s.trim() === '' || Number.isNaN(Number(s)) ? null : Number(s))
 const str = (n: number | null | undefined) => (n === null || n === undefined ? '' : String(n))
@@ -48,6 +49,19 @@ function Form({ booking, preview, existing, month }: { booking: BookingDetail; p
   const [split, setSplit] = useState(str(existing ? existing.split_count : preview?.split_count ?? 1))
   const [reset, setReset] = useState(false)
   const [extras, setExtras] = useState<ExtraRow[]>(existing?.items.map((i) => ({ name: i.name, amount: String(i.amount) })) ?? [])
+
+  // monthly rent of the room or bed. A part of a month is charged as monthly rent / 30 x days.
+  const monthly = preview?.rent ?? null
+  const applyRent = (s: string, e: string) => {
+    if (monthly !== null && s && e && e >= s) setRent(String(prorateRent(monthly, s, e).amount))
+  }
+  const changeStart = (v: string) => { setPeriodStart(v); applyRent(v, periodEnd) }
+  const changeEnd = (v: string) => { setPeriodEnd(v); applyRent(periodStart, v) }
+  const changeMonth = (m: string) => {
+    const p = periodForMonth(m, booking.start_date || undefined)
+    setPeriodStart(p.start); setPeriodEnd(p.end); applyRent(p.start, p.end)
+  }
+  const pro = monthly !== null && periodEnd >= periodStart ? prorateRent(monthly, periodStart, periodEnd) : null
 
   const rentN = num(rent)
   const startN = num(startR)
@@ -106,11 +120,16 @@ function Form({ booking, preview, existing, month }: { booking: BookingDetail; p
         <MonthPicker
           label={t('invMonth')}
           value={periodStart.slice(0, 7)}
-          onChange={(m) => { const p = periodForMonth(m, booking.start_date || undefined); setPeriodStart(p.start); setPeriodEnd(p.end) }}
+          onChange={changeMonth}
         />
-        <DateField label={t('fromDate')} value={periodStart} onChange={setPeriodStart} />
-        <DateField label={t('toDate')} value={periodEnd} onChange={setPeriodEnd} minDate={periodStart} />
+        <DateField label={t('fromDate')} value={periodStart} onChange={changeStart} />
+        <DateField label={t('toDate')} value={periodEnd} onChange={changeEnd} minDate={periodStart} />
         <TextField label={`${t('rentL')} (₹)`} value={rent} onChangeText={setRent} keyboardType="numeric" />
+        {pro && monthly !== null && rentN === pro.amount ? (
+          <T w="semibold" size={13} color={pro.full ? colors.muted : colors.green} style={{ marginTop: -6, marginBottom: 10 }}>
+            {pro.full ? t('proFull') : t('proRent', { d: pro.days, m: inr(monthly), b: PRORATE_DAYS, r: inr(pro.amount) })}
+          </T>
+        ) : null}
       </Card>
 
       <Card>
@@ -175,10 +194,10 @@ export default function InvoiceFormScreen() {
   const existing = useGetInvoiceQuery(invoiceId as string, { skip: !editing })
   const bookingId = editing ? (existing.data ? String(existing.data.booking_id) : undefined) : chosen
   const booking = useGetBookingQuery(bookingId as string, { skip: !bookingId })
-  const preview = useGetInvoicePreviewQuery(bookingId as string, { skip: !bookingId || editing })
+  const preview = useGetInvoicePreviewQuery(bookingId as string, { skip: !bookingId })
   const live = useGetBookingsQuery({ status: 'live' }, { skip: editing || !!bookingId })
 
-  const ready = !!booking.data && (editing ? !!existing.data : !!preview.data)
+  const ready = !!booking.data && !!preview.data && (!editing || !!existing.data)
   const failed = booking.error ?? preview.error ?? existing.error
 
   return (
@@ -186,7 +205,7 @@ export default function InvoiceFormScreen() {
       {!editing && !bookingId ? (
         <>
           <T w="bold" size={15} style={{ marginBottom: 10 }}>{t('chooseBooking')}</T>
-          {live.isLoading ? <T color={colors.muted}>{t('loading')}</T> : null}
+          {live.isLoading ? <Loader inline /> : null}
           {live.data && live.data.length === 0 ? <EmptyState icon="account-off-outline" title={t('noLive')} /> : null}
           {live.data?.map((b) => {
             const look = statusLook(b.status)
@@ -208,7 +227,7 @@ export default function InvoiceFormScreen() {
           <T color={colors.red}>{errText(failed)}</T>
         </Card>
       ) : !ready ? (
-        <T color={colors.muted} style={{ textAlign: 'center', marginTop: 40 }}>{t('loading')}</T>
+        <Loader />
       ) : (
         <Form booking={booking.data as BookingDetail} preview={preview.data} existing={editing ? existing.data : undefined} month={month} />
       )}

@@ -41,7 +41,6 @@ const MENU: { key: Key; icon: keyof typeof Feather.glyphMap }[] = [
   { key: 'm1', icon: 'activity' },
   { key: 'm2', icon: 'tool' },
   { key: 'm7', icon: 'award' },
-  { key: 'm3', icon: 'bar-chart-2' },
 ]
 
 export default function More() {

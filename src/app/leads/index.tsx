@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Pressable, View } from 'react-native'
 import { useRouter } from 'expo-router'
+import { Feather } from '@expo/vector-icons'
 import type { LeadStatus } from '../../api/types'
 import { useSettings } from '../../settings/SettingsProvider'
 import { useGetLeadsQuery } from '../../store/api/leads'
@@ -17,6 +18,10 @@ import { T } from '../../ui/AppText'
 import { TextField } from '../../ui/TextField'
 import { showDate } from '../../utils/dates'
 import { LEAD_STATUSES, leadStatusLook } from '../../utils/leadStatus'
+import { Loader } from '../../ui/Loader'
+
+const leadProps = (l: { properties?: { id: number; name: string }[]; property?: { id: number; name: string } | null }) =>
+  l.properties?.length ? l.properties : l.property ? [l.property] : []
 
 export default function LeadsScreen() {
   const { t, colors, errText } = useSettings()
@@ -59,7 +64,7 @@ export default function LeadsScreen() {
       </View>
 
       {q.isLoading ? (
-        <T color={colors.muted} style={{ textAlign: 'center', marginTop: 30 }}>{t('loading')}</T>
+        <Loader />
       ) : q.isError ? (
         <Card>
           <T color={colors.red} style={{ marginBottom: 12 }}>{errText(q.error)}</T>
@@ -78,7 +83,17 @@ export default function LeadsScreen() {
                   <View style={{ flex: 1 }}>
                     <T w="bold" size={14.5} numberOfLines={1}>{l.name}</T>
                     {l.phone ? <T size={12} color={colors.muted}>+91 {l.phone}</T> : null}
-                    {l.property ? <T size={12} color={colors.muted} numberOfLines={1}>{l.property.name}</T> : null}
+                    {leadProps(l).length ? (
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                        {leadProps(l).map((x) => (
+                          <View key={x.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: colors.line, borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2 }}>
+                            <Feather name="home" size={11} color={colors.muted} />
+                            <T size={11.5} color={colors.text} numberOfLines={1}>{x.name}</T>
+                          </View>
+                        ))}
+                      </View>
+                    ) : null}
+                    {l.source === 'roomindeed' ? <Badge label={t('fromRI')} tone="green" /> : null}
                   </View>
                   <Badge label={t(st.key)} tone={st.tone} />
                 </View>

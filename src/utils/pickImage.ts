@@ -25,3 +25,18 @@ export async function pickImage(camera: boolean, onDenied?: () => void): Promise
   if (a.base64) base64Cache.set(a.uri, a.base64)
   return { uri: a.uri, mime: a.mimeType ?? 'image/jpeg' }
 }
+
+/** Gallery, many photos at once. Returns [] when cancelled. */
+export async function pickImages(limit: number): Promise<Picked[]> {
+  const res = await ImagePicker.launchImageLibraryAsync({
+    quality: 0.6,
+    base64: true,
+    allowsMultipleSelection: true,
+    selectionLimit: Math.max(1, limit),
+  })
+  if (res.canceled) return []
+  return res.assets.slice(0, limit).map((a) => {
+    if (a.base64) base64Cache.set(a.uri, a.base64)
+    return { uri: a.uri, mime: a.mimeType ?? 'image/jpeg' }
+  })
+}

@@ -6,6 +6,10 @@ export const filesApi = baseApi.injectEndpoints({
     uploadFile: builder.mutation<{ key: string; mime_type: string; size: number }, { uri: string; kind: string; mime?: string }>({
       query: ({ uri, kind, mime = 'image/jpeg' }) => ({ url: '/files', method: 'POST', body: { uri, kind, mime } }),
     }),
+    // listing photo: goes to the PUBLIC "listings" bucket so the RoomIndeed website can show it
+    uploadListingPhoto: builder.mutation<{ key: string; url: string }, { uri: string; mime?: string }>({
+      query: ({ uri, mime = 'image/jpeg' }) => ({ url: '/files/public', method: 'POST', body: { uri, mime } }),
+    }),
     // short-lived link (10 minutes) to show or open a private file
     getFileLink: builder.query<{ url: string; expires_in: number }, string>({
       query: (key) => ({ url: '/files/url', params: { key } }),
@@ -15,4 +19,4 @@ export const filesApi = baseApi.injectEndpoints({
   }),
 })
 
-export const { useUploadFileMutation, useGetFileLinkQuery, useLazyGetFileLinkQuery } = filesApi
+export const { useUploadFileMutation, useUploadListingPhotoMutation, useGetFileLinkQuery, useLazyGetFileLinkQuery } = filesApi

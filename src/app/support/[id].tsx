@@ -21,6 +21,7 @@ import { TextField } from '../../ui/TextField'
 import { COMPLAINT_STATUSES, complaintStatusLook } from '../../utils/complaintStatus'
 import { showDate, toYmd } from '../../utils/dates'
 import type { Picked } from '../../utils/pickImage'
+import { Loader } from '../../ui/Loader'
 
 const stamp = (iso: string) => {
   const d = new Date(iso)
@@ -152,7 +153,7 @@ export default function ComplaintDetail() {
   return (
     <Screen title={t('complaint')} back>
       {q.isLoading ? (
-        <T color={colors.muted} style={{ textAlign: 'center', marginTop: 30 }}>{t('loading')}</T>
+        <Loader />
       ) : q.isError || !q.data ? (
         <Card>
           <T color={colors.red} style={{ marginBottom: 12 }}>{errText(q.error)}</T>

@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import * as SecureStore from 'expo-secure-store'
+import { appStorage } from '../utils/appStorage'
 import { api, ApiError, setToken, setUnauthorizedHandler } from '../api/client'
 import type { Subscription, User } from '../api/types'
 
@@ -20,8 +20,8 @@ export const useAuth = () => useContext(AuthContext)
 
 const clearSession = async () => {
   setToken(null)
-  await SecureStore.deleteItemAsync('oa_token').catch(() => {})
-  await SecureStore.deleteItemAsync('oa_user').catch(() => {})
+  await appStorage.remove('oa_token').catch(() => {})
+  await appStorage.remove('oa_user').catch(() => {})
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -45,19 +45,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Restore the session when the app opens
   useEffect(() => {
     ;(async () => {
-      const saved = await SecureStore.getItemAsync('oa_token').catch(() => null)
+      const saved = await appStorage.get('oa_token').catch(() => null)
       if (!saved) return setStatus('out')
       setToken(saved)
       try {
         const me = await api<{ user: User; subscription: Subscription }>('/me')
         setUser(me.user)
         setSub(me.subscription)
-        SecureStore.setItemAsync('oa_user', JSON.stringify(me.user)).catch(() => {})
+        appStorage.set('oa_user', JSON.stringify(me.user)).catch(() => {})
         setStatus('in')
       } catch (e) {
         if (e instanceof ApiError && e.status === 401) return // handler already logged out
         // Server not reachable: stay signed in with the saved profile
-        const cached = await SecureStore.getItemAsync('oa_user').catch(() => null)
+        const cached = await appStorage.get('oa_user').catch(() => null)
         if (cached) { setUser(JSON.parse(cached)); setStatus('in') } else { await logoutLocal() }
       }
     })()
@@ -73,8 +73,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       auth: false,
     })
     setToken(res.token)
-    await SecureStore.setItemAsync('oa_token', res.token)
-    await SecureStore.setItemAsync('oa_user', JSON.stringify(res.user))
+    await appStorage.set('oa_token', res.token)
+    await appStorage.set('oa_user', JSON.stringify(res.user))
     setUser(res.user)
     setSub(res.subscription)
     setStatus('in')
@@ -88,8 +88,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       auth: false,
     })
     setToken(res.token)
-    await SecureStore.setItemAsync('oa_token', res.token)
-    await SecureStore.setItemAsync('oa_user', JSON.stringify(res.user))
+    await appStorage.set('oa_token', res.token)
+    await appStorage.set('oa_user', JSON.stringify(res.user))
     setUser(res.user)
     setSub(res.subscription)
     setStatus('in')

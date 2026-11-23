@@ -11,6 +11,7 @@ import { KeyValue } from '../../ui/KeyValue'
 import { Sheet } from '../../ui/Sheet'
 import { T } from '../../ui/AppText'
 import { inr } from '../../utils/format'
+import { Loader } from '../../ui/Loader'
 
 /** Choose the property, then the room (and bed in a PG). The tenant's details appear; tap to take the payment. */
 export function PayPickerSheet({ onClose, onPay }: { onClose: () => void; onPay: (b: { id: number; name: string; balance: number }) => void }) {
@@ -25,7 +26,7 @@ export function PayPickerSheet({ onClose, onPay }: { onClose: () => void; onPay:
       <T w="medium" size={12.5} color={colors.muted} style={{ marginBottom: 6 }}>{t('selectRoomPay')}</T>
       <RoomPicker want="occupied" value={slot} onChange={setSlot} />
 
-      {slot.bookingId && bq.isLoading ? <T color={colors.muted}>{t('loading')}</T> : null}
+      {slot.bookingId && bq.isLoading ? <Loader inline /> : null}
       {b && look ? (
         <Card style={{ marginTop: 6 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>

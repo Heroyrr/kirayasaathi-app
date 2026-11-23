@@ -19,6 +19,7 @@ import { SelectField } from '../../ui/SelectField'
 import { T } from '../../ui/AppText'
 import { COMPLAINT_STATUSES, complaintStatusLook } from '../../utils/complaintStatus'
 import { currentMonth, monthLabel, shiftMonth, showDate, toYmd } from '../../utils/dates'
+import { Loader } from '../../ui/Loader'
 
 export default function SupportScreen() {
   const { t, colors, errText } = useSettings()
@@ -63,7 +64,7 @@ export default function SupportScreen() {
       </View>
 
       {q.isLoading ? (
-        <T color={colors.muted} style={{ textAlign: 'center', marginTop: 30 }}>{t('loading')}</T>
+        <Loader />
       ) : q.isError ? (
         <Card>
           <T color={colors.red} style={{ marginBottom: 12 }}>{errText(q.error)}</T>

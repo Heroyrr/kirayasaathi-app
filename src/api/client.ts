@@ -211,6 +211,30 @@ async function uploadFile(body: { uri: string; kind: string; mime?: string }) {
   return { key, mime_type: mime, size: bytes.byteLength }
 }
 
+// listing photos: public bucket "listings", first folder = owner id (the storage rules check it)
+async function uploadListingPhoto(body: { uri: string; mime?: string }) {
+  const session = await requireSession()
+  const mime = body.mime ?? 'image/jpeg'
+  const key = `${session.user.id}/listing/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${EXT[mime] ?? 'jpg'}`
+  const b64 = takeBase64(body.uri)
+  let bytes: Uint8Array
+  try {
+    bytes = b64 ? base64ToBytes(b64) : new Uint8Array(await (await fetch(body.uri)).arrayBuffer())
+  } catch {
+    throw new ApiError('Could not read the photo. Please pick it again.', 0, 'E_VALIDATION')
+  }
+  const { error } = await timeout(
+    supabase.storage.from('listings').upload(key, bytes.buffer as ArrayBuffer, { contentType: mime, upsert: false }),
+    60000
+  )
+  if (error) throw new ApiError(error.message, 400)
+  dropBase64(body.uri)
+  return { key, url: listingPhotoUrl(key) }
+}
+
+/** public address of a listing photo (the same address the RoomIndeed website uses) */
+export const listingPhotoUrl = (key: string) => `${apiBase()}/storage/v1/object/public/listings/${key}`
+
 async function fileLink(query: Query) {
   await requireSession()
   const { data, error } = await timeout(supabase.storage.from('files').createSignedUrl(String(query.key ?? ''), 600))
@@ -227,6 +251,7 @@ const ROUTES: [method: string, pattern: string, fn: string][] = [
   ['GET', '/properties', 'api_get_properties'], ['POST', '/properties', 'api_add_property'],
   ['GET', '/properties/:id', 'api_get_property'], ['PATCH', '/properties/:id', 'api_update_property'],
   ['DELETE', '/properties/:id', 'api_delete_property'],
+  ['PATCH', '/properties/:id/listing', 'api_update_listing'], ['POST', '/properties/:id/live', 'api_set_live'],
   ['POST', '/properties/:id/categories', 'api_add_category'],
   ['PATCH', '/categories/:id', 'api_update_category'], ['DELETE', '/categories/:id', 'api_delete_category'],
   ['POST', '/properties/:id/rooms', 'api_add_room'], ['DELETE', '/rooms/:id', 'api_delete_room'],
@@ -291,6 +316,7 @@ export async function api<T = any>(path: string, opts: Opts = {}): Promise<T> {
     try { await requireSession() } catch (e) { onUnauthorized?.(); throw e }
   }
   if (path === '/files' && m === 'POST') return (await uploadFile(body as any)) as T
+  if (path === '/files/public' && m === 'POST') return (await uploadListingPhoto(body as any)) as T
   if (path === '/files/url' && m === 'GET') return (await fileLink(cleanQuery(query))) as T
 
   for (const r of compiled) {

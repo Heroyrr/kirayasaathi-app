@@ -13,8 +13,9 @@ import { Button } from '../../ui/Button'
 import { StatTile } from '../../ui/StatTile'
 import { SubscriptionBanner } from '../../ui/SubscriptionBanner'
 import { inr } from '../../utils/format'
-import { showDate } from '../../utils/dates'
+import { daysFromToday, showDate } from '../../utils/dates'
 import type { Key } from '../../i18n/strings'
+import { Loader } from '../../ui/Loader'
 
 type Icon = keyof typeof MaterialCommunityIcons.glyphMap
 const QUICK: { key: Key; icon: Icon }[] = [
@@ -56,7 +57,7 @@ export default function Home() {
       onRefresh={() => q.refetch()}
     >
       {q.isLoading ? (
-        <T color={colors.muted} style={{ textAlign: 'center', marginTop: 40 }}>{t('loading')}</T>
+        <Loader />
       ) : q.isError ? (
         <Card>
           <T color={colors.red} style={{ marginBottom: 12 }}>{errText(q.error)}</T>
@@ -101,7 +102,7 @@ export default function Home() {
 
           <Card>
             <T w="bold" size={15} style={{ marginBottom: 8 }}>{t('rem')}</T>
-            {d.reminders.leads.length + d.reminders.complaints.length === 0 ? (
+            {d.reminders.leads.length + d.reminders.complaints.length + (d.reminders.notices?.length ?? 0) === 0 ? (
               <T size={13.5} color={colors.muted}>{t('noRem')}</T>
             ) : (
               <>
@@ -111,6 +112,15 @@ export default function Home() {
                     <T size={12.5} color={colors.muted}>{when(r.next_action_at)}</T>
                   </View>
                 ))}
+                {(d.reminders.notices ?? []).map((r) => {
+                  const left = daysFromToday(r.leave_date)
+                  return (
+                    <Pressable key={`n${r.booking_id}`} onPress={() => router.push(`/tenant/${r.tenant_id}` as any)} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, gap: 8 }}>
+                      <T size={13.5} style={{ flex: 1 }}>{t('remLeaving')}: {r.tenant_name} · {r.property_name} {r.room_no}{r.bed_label ? ` (${r.bed_label})` : ''}</T>
+                      <T size={12.5} color={left <= 0 ? colors.red : colors.amber}>{left < 0 ? t('leavePassed', { n: Math.abs(left) }) : left === 0 ? t('leaveToday') : left === 1 ? t('leaveTomorrow') : showDate(r.leave_date)}</T>
+                    </Pressable>
+                  )
+                })}
                 {d.reminders.complaints.map((r) => (
                   <View key={`c${r.id}`} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 }}>
                     <T size={13.5} style={{ flex: 1 }}>{t('complaint')}: {r.service}{r.property ? ` · ${r.property.name}` : ''}</T>

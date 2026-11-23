@@ -18,6 +18,10 @@ import { T } from '../../ui/AppText'
 import { TextField } from '../../ui/TextField'
 import { showDate, toYmd } from '../../utils/dates'
 import { LEAD_STATUSES, leadStatusLook } from '../../utils/leadStatus'
+import { Loader } from '../../ui/Loader'
+import { MultiSelectField } from '../../ui/MultiSelectField'
+import { Badge } from '../../ui/Badge'
+import { useGetPropertiesQuery } from '../../store/api/properties'
 
 const stamp = (iso: string) => {
   const d = new Date(iso)
@@ -29,12 +33,15 @@ function LeadForm({ lead }: { lead: Lead }) {
   const router = useRouter()
   const { busy, run } = useAction()
   const [update] = useUpdateLeadMutation()
+  const props = useGetPropertiesQuery()
+  const [propIds, setPropIds] = useState<(number | string)[]>((lead.properties ?? (lead.property ? [lead.property] : [])).map((x) => x.id))
   const [lastTalk, setLastTalk] = useState('') // a NEW entry; old ones stay in the history
   const [nextAction, setNextAction] = useState('') // a NEW entry
   const [nextDate, setNextDate] = useState(lead.next_action_at ?? '')
   const [status, setStatus] = useState<LeadStatus>(lead.status)
   const [tried, setTried] = useState(false)
 
+  const shown = lead.properties?.length ? lead.properties : lead.property ? [lead.property] : []
   const talks = (lead.logs ?? []).filter((g) => g.kind === 'talk')
   const nexts = (lead.logs ?? []).filter((g) => g.kind === 'next')
   const dateErr = nextAction.trim() !== '' && !nextDate ? t('errNextDate') : ''
@@ -47,6 +54,7 @@ function LeadForm({ lead }: { lead: Lead }) {
         ...(lastTalk.trim() ? { last_talk: lastTalk.trim() } : {}),
         ...(nextAction.trim() ? { next_action: nextAction.trim() } : {}),
         next_action_at: nextDate, // empty string clears it
+        property_ids: propIds.map(Number),
         status,
       }).unwrap()
     )
@@ -83,7 +91,7 @@ function LeadForm({ lead }: { lead: Lead }) {
           <View style={{ flex: 1, gap: 4 }}>
             <T w="bold" size={16}>{lead.name}</T>
             <T size={12.5} color={colors.muted}>{lead.phone ? `+91 ${lead.phone}` : '—'}</T>
-            {lead.property ? <T size={12.5} color={colors.muted} numberOfLines={1}>{lead.property.name}</T> : null}
+            {lead.source === 'roomindeed' ? <Badge label={t('fromRI')} tone="green" /> : null}
             {lead.phone ? (
               <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
                 <IconButton tint={colors.pri} onPress={() => Linking.openURL(`tel:${lead.phone}`)}>
@@ -96,12 +104,35 @@ function LeadForm({ lead }: { lead: Lead }) {
             ) : null}
           </View>
         </View>
+        {shown.length ? (
+          <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.line }}>
+            <T w="medium" size={12} color={colors.muted}>{t('leadProps')}</T>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+              {shown.map((x) => (
+                <View key={x.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: colors.line, borderRadius: 10, paddingHorizontal: 9, paddingVertical: 4 }}>
+                  <Feather name="home" size={12} color={colors.pri} />
+                  <T w="medium" size={13}>{x.name}</T>
+                </View>
+              ))}
+            </View>
+          </View>
+        ) : null}
         {lead.note ? (
           <View style={{ marginTop: 12, paddingTop: 10, borderTopWidth: 1, borderTopColor: colors.line }}>
             <T w="medium" size={12} color={colors.muted}>{t('leadNote')}</T>
             <T size={14} style={{ marginTop: 2 }}>{lead.note}</T>
           </View>
         ) : null}
+      </Card>
+
+      <Card>
+        <MultiSelectField
+          label={t('leadProps')}
+          hint={t('leadPropsH')}
+          values={propIds}
+          options={(props.data ?? []).map((p) => ({ id: p.id, label: p.name }))}
+          onChange={setPropIds}
+        />
       </Card>
 
       <Card>
@@ -135,7 +166,7 @@ export default function LeadDetail() {
   return (
     <Screen title={q.data?.name ?? t('leads')} back>
       {q.isLoading ? (
-        <T color={colors.muted} style={{ textAlign: 'center', marginTop: 30 }}>{t('loading')}</T>
+        <Loader />
       ) : q.isError || !q.data ? (
         <Card>
           <T color={colors.red} style={{ marginBottom: 12 }}>{errText(q.error)}</T>

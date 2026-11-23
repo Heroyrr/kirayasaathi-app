@@ -14,12 +14,26 @@ export const propertiesApi = baseApi.injectEndpoints({
       query: (propertyId) => ({ url: `/properties/${propertyId}` }),
       providesTags: (_r, _e, propertyId) => [{ type: 'Property', id: String(propertyId) }],
     }),
-    addProperty: builder.mutation<{ id: number }, { name: string; type: 'BED' | 'NON_BED'; address?: string }>({
+    addProperty: builder.mutation<{ id: number }, { name: string; type: 'BED' | 'NON_BED' }>({
       query: (body) => ({ url: '/properties', method: 'POST', body }),
       invalidatesTags: ['Properties', 'Home'],
     }),
-    updateProperty: builder.mutation<unknown, { id: number; name?: string; address?: string }>({
+    updateProperty: builder.mutation<unknown, { id: number; name?: string }>({
       query: ({ id, ...body }) => ({ url: `/properties/${id}`, method: 'PATCH', body }),
+      invalidatesTags: ['Properties', 'Property'],
+    }),
+    // RoomIndeed listing: save the details and the location (draft), then go live / offline
+    updateListing: builder.mutation<Property, {
+      id: number; min_rent?: number; security_deposit?: number
+      amenities?: string[]; unit_types?: string[]; photo_keys?: string[]
+      address?: string; pincode?: string; state?: string; city?: string; locality?: string; landmark?: string
+      lat?: number | null; lng?: number | null
+    }>({
+      query: ({ id, ...body }) => ({ url: `/properties/${id}/listing`, method: 'PATCH', body }),
+      invalidatesTags: ['Properties', 'Property'],
+    }),
+    setLive: builder.mutation<Property, { id: number; live: boolean }>({
+      query: ({ id, live }) => ({ url: `/properties/${id}/live`, method: 'POST', body: { live } }),
       invalidatesTags: ['Properties', 'Property'],
     }),
     // hard delete: also removes the property's bookings, invoices and payments
@@ -68,6 +82,8 @@ export const {
   useGetPropertyQuery,
   useAddPropertyMutation,
   useUpdatePropertyMutation,
+  useUpdateListingMutation,
+  useSetLiveMutation,
   useDeletePropertyMutation,
   useAddCategoryMutation,
   useUpdateCategoryMutation,

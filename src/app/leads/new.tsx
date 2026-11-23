@@ -7,7 +7,7 @@ import { useGetPropertiesQuery } from '../../store/api/properties'
 import { Button } from '../../ui/Button'
 import { Card } from '../../ui/Card'
 import { Screen } from '../../ui/Screen'
-import { SelectField } from '../../ui/SelectField'
+import { MultiSelectField } from '../../ui/MultiSelectField'
 import { TextField } from '../../ui/TextField'
 import { cleanPhone } from '../../utils/format'
 
@@ -19,7 +19,7 @@ export default function NewLead() {
   const props = useGetPropertiesQuery()
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
-  const [propertyId, setPropertyId] = useState<number | string | undefined>()
+  const [propertyIds, setPropertyIds] = useState<(number | string)[]>([])
   const [note, setNote] = useState('')
 
   const digits = cleanPhone(phone)
@@ -33,25 +33,26 @@ export default function NewLead() {
       addLead({
         name: name.trim(),
         phone: digits,
-        ...(propertyId ? { property_id: Number(propertyId) } : {}),
+        ...(propertyIds.length ? { property_ids: propertyIds.map(Number) } : {}),
         ...(note.trim() ? { note: note.trim() } : {}),
       }).unwrap()
     )
     if (r.ok) router.replace(`/leads/${r.data.id}` as any)
   }
 
-  const options = [{ id: 0, label: t('noneOpt') }, ...(props.data ?? []).map((p) => ({ id: p.id, label: p.name }))]
+  const options = (props.data ?? []).map((p) => ({ id: p.id, label: p.name }))
 
   return (
     <Screen title={t('newLead')} back>
       <Card>
         <TextField label={t('tName')} value={name} onChangeText={setName} autoCapitalize="words" error={tried ? nameErr : ''} />
         <TextField label={t('tPhone')} prefix="+91" value={phone} onChangeText={setPhone} keyboardType="number-pad" maxLength={14} error={tried ? phoneErr : ''} />
-        <SelectField
-          label={t('propSel')}
-          value={propertyId ?? 0}
+        <MultiSelectField
+          label={t('leadProps')}
+          hint={t('leadPropsH')}
+          values={propertyIds}
           options={options}
-          onChange={(id) => setPropertyId(Number(id) || undefined)}
+          onChange={setPropertyIds}
         />
         <TextField label={t('leadNote')} value={note} onChangeText={setNote} multiline />
       </Card>
