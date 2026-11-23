@@ -51,10 +51,11 @@ export default function NotificationsScreen() {
         <EmptyState icon="bell-outline" title={t('noticesEmpty')} sub={t('noticesEmptyH')} />
       ) : (
         list.map((n) => {
-          const go = n.url && SAFE_PATH.test(n.url) ? n.url : null
+          // a lead opens the lead; every other notification opens its own detail page (never the list again)
+          const go = n.type === 'lead' && n.url && SAFE_PATH.test(n.url) ? n.url : `/notification/${n.id}`
           const isNew = fresh.current.has(n.id)
           return (
-            <Pressable key={n.id} disabled={!go} onPress={() => go && router.push(go as any)}>
+            <Pressable key={n.id} onPress={() => router.push(go as any)}>
               <Card style={{ flexDirection: 'row', gap: 12, alignItems: 'flex-start', borderWidth: isNew ? 1 : 0, borderColor: colors.pri }}>
                 <View style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: `${colors.pri}22`, alignItems: 'center', justifyContent: 'center' }}>
                   <Feather name={n.type === 'lead' ? 'user-plus' : 'bell'} size={19} color={colors.pri} />
@@ -68,10 +69,10 @@ export default function NotificationsScreen() {
                       </View>
                     ) : null}
                   </View>
-                  <T size={13.5}>{n.body}</T>
+                  <T size={13.5} numberOfLines={2}>{n.body}</T>
                   <T size={12} color={colors.muted} style={{ marginTop: 2 }}>{stamp(n.created_at)}</T>
                 </View>
-                {go ? <Feather name="chevron-right" size={18} color={colors.muted} style={{ alignSelf: 'center' }} /> : null}
+                <Feather name="chevron-right" size={18} color={colors.muted} style={{ alignSelf: 'center' }} />
               </Card>
             </Pressable>
           )

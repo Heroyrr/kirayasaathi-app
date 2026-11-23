@@ -246,7 +246,7 @@ export type ComplaintRow = {
 }
 export type ComplaintsResult = { counts: Record<ComplaintStatus, number> & { total: number }; complaints: ComplaintRow[] }
 
-export type AppNotification = { id: number; title: string; body: string; type: string; url: string | null; read: boolean; created_at: string }
+export type AppNotification = { id: number; notice_id: number | null; title: string; body: string; type: string; url: string | null; read: boolean; created_at: string }
 export type NotificationsResult = { push_enabled: boolean; unread: number; items: AppNotification[] }
 export type Notice = { id: number; title: string; body: string; screen: string | null; created_at: string }
 export type AppConfig = {

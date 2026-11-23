@@ -63,8 +63,12 @@ export function PushSetup() {
 
       const open = (n: Notifications.Notification, delay = 0) => {
         dispatch(baseApi.util.invalidateTags(["Notices"]));
-        const url = n.request.content.data?.url;
-        if (typeof url !== "string" || !SAFE_PATH.test(url)) return;
+        const d = n.request.content.data as Record<string, unknown> | undefined;
+        let url = d?.url;
+        // a notice (not a lead) opens its own detail page instead of the list
+        if (d?.type === "notice" && /^\d+$/.test(String(d?.notice_id ?? "")))
+          url = `/notification/${d.notice_id}?by=notice`;
+        if (typeof url !== "string" || !(SAFE_PATH.test(url) || /^\/notification\/\d+\?by=notice$/.test(url))) return;
         setTimeout(() => router.push(url as any), delay);
       };
 
