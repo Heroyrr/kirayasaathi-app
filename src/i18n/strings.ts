@@ -637,6 +637,7 @@ const en = {
   err_OTP_ATTEMPTS: "Too many wrong tries. Ask for a new OTP.",
   err_NAME_REQUIRED: "Please enter your name.",
   err_VIEW_ONLY: "Your plan has ended. Choose a plan to make changes.",
+  err_PLAN_EXPIRED: "Your plan has expired, so your properties are offline. Renew your plan to make them live again.",
   err_E_VALIDATION: "Please check the details you entered.",
   err_UNIT_LIMIT:
     "Your plan limit is reached. Upgrade your plan to add more units.",
@@ -1292,6 +1293,7 @@ const hi: typeof en = {
   err_OTP_ATTEMPTS: "बहुत ज्यादा गलत कोशिशें। नया OTP मंगाएं।",
   err_NAME_REQUIRED: "कृपया अपना नाम डालें।",
   err_VIEW_ONLY: "आपका प्लान खत्म हो गया है। बदलाव के लिए प्लान चुनें।",
+  err_PLAN_EXPIRED: "आपका प्लान खत्म हो गया है, इसलिए आपकी प्रॉपर्टी ऑफलाइन हैं। उन्हें दोबारा लाइव करने के लिए प्लान रिन्यू करें।",
   err_E_VALIDATION: "कृपया भरी हुई जानकारी जांचें।",
   err_UNIT_LIMIT:
     "आपके प्लान की सीमा पूरी हो गई है। और यूनिट जोड़ने के लिए प्लान अपग्रेड करें।",

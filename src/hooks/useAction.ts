@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { router } from 'expo-router'
 import { Alert } from '../ui/AppAlert'
 import { useSettings } from '../settings/SettingsProvider'
 
@@ -13,7 +14,11 @@ export function useAction() {
       const data = await fn()
       return { ok: true, data }
     } catch (e) {
-      Alert.alert(t('error'), errText(e), undefined, { tone: 'error' })
+      // plan over: the server refuses; offer the plans screen right in the alert
+      const expired = (e as { code?: unknown } | null)?.code === 'PLAN_EXPIRED'
+      Alert.alert(t('error'), errText(e), expired
+        ? [{ text: t('cancel'), style: 'cancel' }, { text: t('choose'), onPress: () => router.push('/plans' as any) }]
+        : undefined, { tone: 'error' })
       return { ok: false }
     } finally {
       setBusy(false)

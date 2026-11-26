@@ -28,6 +28,7 @@ export const baseApi = createApi({
   reducerPath: 'api',
   baseQuery,
   tagTypes: ['Home', 'Properties', 'Property', 'Meters', 'Readings', 'Tenants', 'Tenant', 'Bookings', 'Booking', 'Balances', 'Invoices', 'Invoice', 'Payments', 'File', 'Leads', 'Lead', 'Complaints', 'Complaint', 'Notices'],
+  refetchOnFocus: true,
   refetchOnMountOrArgChange: 20, // seconds: a screen opened again after 20 s loads fresh data
   endpoints: () => ({}),
 })
