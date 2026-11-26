@@ -1,12 +1,14 @@
 /*
-| Plans shown in the app. Change the prices here (rupees). The limits (units, properties) are
+| FALLBACK plans (used only if the database list cannot be loaded). The real list now lives in the `plans` table
+| in Supabase (supabase/19_plans_table.sql): change or add plans there, no app update needed.
+| Old note: plans shown in the app. Change the prices here (rupees). The limits (units, properties) are
 | enforced by the database, see _limits() in supabase/schema.sql (and 11_free_plan_limits.sql): keep both in step.
 | The free trial is 1 property and 10 units.
 | Yearly = 10 months price (2 months free).
 */
 export type PlanId = 'basic' | 'starter' | 'growth' | 'pro'
 export type Bi = { en: string; hi: string }
-export type PlanInfo = { id: PlanId; name: string; units: number; properties: number | null; monthly: number; yearly: number; why: Bi; features: Bi[] }
+export type PlanInfo = { id: string; name: string; units: number; properties: number | null; monthly: number; yearly: number; why: Bi; features: Bi[] }
 
 // What the owner gets. Edit the wording or the lists here.
 const F = {

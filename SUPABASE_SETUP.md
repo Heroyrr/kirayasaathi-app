@@ -29,13 +29,13 @@ Put your Supabase URL, anon key and the team WhatsApp number in `.env` (and in `
     eas build -p android --profile preview
 Share the link it prints.
 
-Prices and limits: `src/utils/plans.ts` (shown in the app) and `_limits()` in `supabase/schema.sql` / `11_free_plan_limits.sql` (enforced). Keep them in step.
+Prices and limits now live in the `plans` table (run `19_plans_table.sql` once). Change them from the SQL Editor with `admin_upsert_plan(...)`: the app and the limits update together, no app release. `src/utils/plans.ts` is only a fallback.
 The old phone OTP login is saved in `later/login-otp.tsx` for when SMS is added.
 
 ---
 
 ## Later parts (update check, push notifications, notices)
 
-Run in this order after `11_free_plan_limits.sql`: `12_app_config.sql`, `13_push_notifications.sql`, `14_notices.sql`.
+Run in this order after `11_free_plan_limits.sql`: `12_app_config.sql`, `13_push_notifications.sql`, `14_notices.sql` ... `18_partner_branding_live_sites.sql`, then `19_plans_table.sql`.
 `13` needs two extensions and two Vault secrets first, and the Edge Function in `supabase/functions/send-push`.
 The full steps are in `docs/FIREBASE_PUSH_SETUP.md`.

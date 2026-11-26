@@ -93,8 +93,8 @@ export default function InvoiceDetail() {
           <View style={{ gap: 10 }}>
             {!inv.cancelled ? <Button title={t('recPay')} onPress={() => setPaying(true)} /> : null}
             <View style={{ flexDirection: 'row', gap: 10 }}>
-              <Button title={t('shareWa')} variant="ghost" onPress={() => shareOnWhatsApp(inv, user?.name)} style={{ flex: 1 }} />
-              <Button title={t('sharePdf')} variant="ghost" loading={busy} onPress={() => run(() => shareInvoicePdf(inv, user?.name))} style={{ flex: 1 }} />
+              <Button title={t('shareWa')} variant="ghost" onPress={() => shareOnWhatsApp(inv, user?.name, user?.partner)} style={{ flex: 1 }} />
+              <Button title={t('sharePdf')} variant="ghost" loading={busy} onPress={() => run(() => shareInvoicePdf(inv, user?.name, user?.partner))} style={{ flex: 1 }} />
             </View>
             {!inv.cancelled ? <Button title={t('editInv')} variant="ghost" onPress={() => router.push(`/invoice/form?invoiceId=${inv.id}` as any)} /> : null}
             {!inv.cancelled ? <Button title={t('cancelInv')} variant="danger" onPress={cancel} /> : null}

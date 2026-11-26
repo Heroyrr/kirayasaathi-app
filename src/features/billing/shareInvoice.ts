@@ -1,7 +1,8 @@
 import { Linking } from 'react-native'
 import * as Print from 'expo-print'
 import * as Sharing from 'expo-sharing'
-import type { InvoiceFull } from '../../api/types'
+import type { InvoiceFull, OwnerPartner } from '../../api/types'
+import { listingPhotoUrl } from '../../api/client'
 import { showDate } from '../../utils/dates'
 import { inr } from '../../utils/format'
 
@@ -39,10 +40,11 @@ function statement(inv: InvoiceFull) {
 const money = (n: number) => `${n < 0 ? '- ' : ''}${inr(Math.abs(n))}`
 const signed = (n: number) => `${n < 0 ? '- ' : '+ '}${inr(Math.abs(n))}`
 
-/** Plain text for WhatsApp */
-export function invoiceText(inv: InvoiceFull, ownerName?: string) {
+/** Plain text for WhatsApp. A partner owner's invoice starts with the partner name and ends with a KirayaSaathi thank you. */
+export function invoiceText(inv: InvoiceFull, ownerName?: string, partner?: OwnerPartner | null) {
   const { steps, payable } = statement(inv)
   const lines = [
+    ...(partner ? [`*${partner.name}*`] : []),
     `*Invoice ${inv.number}*`,
     `${inv.booking.tenant?.name ?? ''} | ${where(inv)}`,
     `Period: ${showDate(inv.period_start)} to ${showDate(inv.period_end)}`,
@@ -57,18 +59,45 @@ export function invoiceText(inv: InvoiceFull, ownerName?: string) {
   if (inv.cancelled) lines.push('CANCELLED')
   else lines.push(payable < 0 ? `*Advance balance: ${inr(Math.abs(payable))}*` : `*Total payable: ${inr(payable)}*`)
   if (ownerName) lines.push('', `- ${ownerName}`)
+  if (partner) lines.push('', 'Thank you!', 'This invoice was created with the KirayaSaathi app.')
   return lines.join('\n')
 }
 
-export function shareOnWhatsApp(inv: InvoiceFull, ownerName?: string) {
+export function shareOnWhatsApp(inv: InvoiceFull, ownerName?: string, partner?: OwnerPartner | null) {
   const phone = inv.booking.tenant?.phone
-  const text = encodeURIComponent(invoiceText(inv, ownerName))
+  const text = encodeURIComponent(invoiceText(inv, ownerName, partner))
   return Linking.openURL(phone ? `https://wa.me/91${phone}?text=${text}` : `https://wa.me/?text=${text}`)
 }
 
 const LOGO = `<svg width="46" height="46" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="120" rx="28" fill="#F7F9F9"/><path d="M22 58 L60 26 L98 58" fill="none" stroke="#0F5C68" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><path d="M34 50 V94 H86 V50" fill="none" stroke="#0F5C68" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="71" r="14" fill="#F4A300"/><text x="60" y="78" text-anchor="middle" font-size="19" font-weight="800" fill="#0B2A30" font-family="Arial,sans-serif">&#8377;</text></svg>`
 
-function buildHtml(inv: InvoiceFull, ownerName?: string) {
+const logoSvg = (size: number) => LOGO.replace('width="46" height="46"', `width="${size}" height="${size}"`)
+
+/**
+ * The partner's logo as a data address, so it is inside the PDF for sure (a web address can still be loading when the PDF is made).
+ * No logo, no internet, or a slow answer: null, and the PDF shows the first letter of the partner name instead.
+ */
+async function partnerLogo(partner?: OwnerPartner | null): Promise<string | null> {
+  if (!partner?.logo_key) return null
+  try {
+    const ctl = new AbortController()
+    const timer = setTimeout(() => ctl.abort(), 6000)
+    const res = await fetch(listingPhotoUrl(partner.logo_key), { signal: ctl.signal })
+    clearTimeout(timer)
+    if (!res.ok) return null
+    const blob = await res.blob()
+    return await new Promise<string | null>((resolve) => {
+      const r = new FileReader()
+      r.onloadend = () => resolve(typeof r.result === 'string' ? r.result : null)
+      r.onerror = () => resolve(null)
+      r.readAsDataURL(blob)
+    })
+  } catch {
+    return null
+  }
+}
+
+function buildHtml(inv: InvoiceFull, ownerName?: string, partner?: OwnerPartner | null, partnerLogoUri?: string | null) {
   const { steps, payable } = statement(inv)
   const state = inv.cancelled ? { t: 'CANCELLED', bg: '#E5E7EB', fg: '#4B5563' } : inv.due <= 0 ? { t: 'PAID', bg: '#DDF3E4', fg: '#1C7A3C' } : inv.paid > 0 ? { t: 'PARTIAL', bg: '#FFF0CC', fg: '#8A5A00' } : { t: 'UNPAID', bg: '#FDE7E4', fg: '#B42318' }
   const issued = showDate(inv.created_at.slice(0, 10))
@@ -83,6 +112,25 @@ function buildHtml(inv: InvoiceFull, ownerName?: string) {
       return `<tr><td class="d">${esc(s.label)}</td><td class="a" style="color:${color}">${esc(idx === 0 ? inr(s.amount) : signed(s.amount))}</td><td class="a">${esc(money(s.run))}</td></tr>`
     })
     .join('')
+  // top of the invoice: the partner (logo + company name) for a partner owner, otherwise KirayaSaathi
+  const initial = esc((partner?.name.trim().charAt(0) || 'P').toUpperCase())
+  const partnerMark = partnerLogoUri
+    ? `<img src="${partnerLogoUri}" style="width:46px;height:46px;border-radius:12px;object-fit:contain;background:#fff" />`
+    : `<div style="width:46px;height:46px;border-radius:12px;background:#F4A300;color:#0B2A30;font-weight:800;font-size:24px;text-align:center;line-height:46px">${initial}</div>`
+  const head = partner
+    ? `<td style="width:60px">${partnerMark}</td>
+    <td><div class="brand">${esc(partner.name)}</div><div class="tag">Rent invoice</div></td>`
+    : `<td style="width:60px">${LOGO}</td>
+    <td><div class="brand">Kiraya<b>Saathi</b></div><div class="tag">Rent, tenants and payments, made simple.</div></td>`
+  // bottom: for a partner owner, KirayaSaathi (logo + name) with a thank you, so the tenant knows the app that made the invoice
+  const foot = partner
+    ? `<div class="foot"><div class="thanks">Thank you for staying with ${esc(partner.name)}!</div>
+    <div style="margin-top:12px;text-align:center">
+      <span style="display:inline-block;vertical-align:middle">${logoSvg(30)}</span>
+      <span style="display:inline-block;vertical-align:middle;margin-left:8px;font-size:16px;font-weight:800;color:#0F5C68">Kiraya<span style="color:#F4A300">Saathi</span></span>
+    </div>
+    <div style="margin-top:4px;font-size:10.5px;color:#5f7075">This invoice was created with the KirayaSaathi app.<br/>Rent, tenants and payments, made simple.</div></div>`
+    : `<div class="foot"><div class="thanks">Thank you!</div>Made with KirayaSaathi</div>`
   const finalLabel = inv.cancelled ? 'CANCELLED' : payable < 0 ? 'ADVANCE BALANCE' : 'TOTAL PAYABLE'
   const finalValue = inv.cancelled ? inr(0) : inr(Math.abs(payable))
 
@@ -92,11 +140,11 @@ function buildHtml(inv: InvoiceFull, ownerName?: string) {
   body { margin: 0; font-family: Helvetica, Arial, sans-serif; color: #17252a; font-size: 13px }
   .hd { background: #0F5C68; color: #fff; padding: 22px 30px }
   .hd table { width: 100%; border-collapse: collapse }
-  .brand { font-size: 24px; font-weight: 800; letter-spacing: -0.5px }
+  .brand { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; color: #fff }
   .brand b { color: #F4A300 }
   .tag { font-size: 11px; color: #BFE0E6; margin-top: 2px }
   .iv { text-align: right }
-  .iv .t { font-size: 26px; font-weight: 800; letter-spacing: 1px }
+  .iv .t { font-size: 26px; font-weight: 800; letter-spacing: 1px; color: #fff }
   .iv .n { font-size: 12px; color: #BFE0E6; margin-top: 2px }
   .gold { height: 5px; background: #F4A300 }
   .body { padding: 26px 30px 10px }
@@ -118,8 +166,7 @@ function buildHtml(inv: InvoiceFull, ownerName?: string) {
   .cx { color: #B42318; font-weight: 800; font-size: 20px; letter-spacing: 3px; text-align: center; margin: 6px 0 14px }
   </style></head><body>
   <div class="hd"><table><tr>
-    <td style="width:60px">${LOGO}</td>
-    <td><div class="brand">Kiraya<b>Saathi</b></div><div class="tag">Rent, tenants and payments, made simple.</div></td>
+    ${head}
     <td class="iv"><div class="t">INVOICE</div><div class="n">${esc(inv.number)}</div><div class="n">Issued ${esc(issued)}</div></td>
   </tr></table></div>
   <div class="gold"></div>
@@ -135,7 +182,7 @@ function buildHtml(inv: InvoiceFull, ownerName?: string) {
       ${stRows}
       <tr class="final"><td>${finalLabel}</td><td></td><td class="a">${esc(finalValue)}</td></tr></table>
   </div>
-  <div class="foot"><div class="thanks">Thank you!</div>Made with KirayaSaathi</div>
+  ${foot}
   </body></html>`
 }
 
@@ -163,9 +210,10 @@ async function renamePdf(uri: string, name: string): Promise<string> {
 }
 
 /** Builds a one page PDF and opens the phone's share sheet (WhatsApp, mail, save...) */
-export async function shareInvoicePdf(inv: InvoiceFull, ownerName?: string) {
+export async function shareInvoicePdf(inv: InvoiceFull, ownerName?: string, partner?: OwnerPartner | null) {
   const name = invoiceFileName(inv)
-  const { uri } = await Print.printToFileAsync({ html: buildHtml(inv, ownerName), width: 595, height: 842 })
+  const logo = await partnerLogo(partner)
+  const { uri } = await Print.printToFileAsync({ html: buildHtml(inv, ownerName, partner, logo), width: 595, height: 842 })
   const file = await renamePdf(uri, name)
   if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(file, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: name })
 }

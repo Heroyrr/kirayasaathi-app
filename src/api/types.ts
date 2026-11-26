@@ -1,4 +1,7 @@
-export type User = { id: number; name: string; phone: string | null; email?: string | null; language: 'en' | 'hi' }
+/** The company an owner belongs to (a collab company or an owner with his own website). null = a plain KirayaSaathi owner. */
+export type OwnerPartner = { name: string; slug: string; logo_key: string | null }
+
+export type User = { id: number; name: string; phone: string | null; email?: string | null; language: 'en' | 'hi'; partner?: OwnerPartner | null }
 
 export type Subscription = {
   plan: string | null
@@ -30,6 +33,15 @@ export type HomeData = {
   subscription: Subscription
 }
 
+/** A website this property shows on (GharSaathi, the owner's partner site, partner sites that also show KirayaSaathi owners) */
+export type LiveSite = {
+  slug: string
+  name: string
+  logo_key: string | null
+  main: boolean
+  url_template: string | null // "{q}" = the property name; null = the website address is not set yet
+}
+
 export type Property = {
   id: number
   name: string
@@ -38,7 +50,9 @@ export type Property = {
   units: number
   occupied: number
   vacant: number
-  // RoomIndeed listing
+  // live listing (GharSaathi + partner websites)
+  live_sites?: LiveSite[]
+  share_url?: string | null // GharSaathi link of this property for WhatsApp; null = not live or the website address is not set yet
   is_live: boolean
   live_at: string | null
   min_rent: number | null
@@ -213,7 +227,8 @@ export type Lead = {
   property_id: number | null
   property: { id: number; name: string } | null
   properties: { id: number; name: string }[] // every property the lead asked about
-  source?: 'app' | 'roomindeed'
+  source?: string // 'app' (added by hand) or the website it came from: 'roomindeed', 'gharsaathi', a partner slug
+  source_name?: string | null // "RoomIndeed", "GharSaathi", ... null for leads added in the app
   note: string | null
   status: LeadStatus
   last_talk: string | null

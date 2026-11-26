@@ -11,7 +11,8 @@ import { Screen } from '../ui/Screen'
 import { T } from '../ui/AppText'
 import { showDate, toYmd } from '../utils/dates'
 import { inr } from '../utils/format'
-import { CUSTOM_PLAN, PLANS, SUPPORT_WHATSAPP } from '../utils/plans'
+import { CUSTOM_PLAN, PLANS as FALLBACK_PLANS, SUPPORT_WHATSAPP } from '../utils/plans'
+import { useGetPlansQuery } from '../store/api/plans'
 
 function Bar({ used, limit }: { used: number; limit: number | null | undefined }) {
   const { colors } = useSettings()
@@ -26,6 +27,8 @@ function Bar({ used, limit }: { used: number; limit: number | null | undefined }
 export default function PlansScreen() {
   const { t, colors, lang } = useSettings()
   const { user, subscription: s } = useAuth()
+  const { data: livePlans } = useGetPlansQuery()
+  const PLANS = livePlans && livePlans.length ? livePlans : FALLBACK_PLANS
 
   const stateLook = s?.state === 'view_only' ? { key: 'stView', tone: 'red' as const } : s?.state === 'grace' ? { key: 'stGrace', tone: 'amber' as const } : { key: 'planActive', tone: 'green' as const }
   const planName = s?.plan === 'trial' ? t('planFree') : PLANS.find((p) => p.id === s?.plan)?.name ?? '—'

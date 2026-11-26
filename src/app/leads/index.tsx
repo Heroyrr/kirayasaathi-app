@@ -23,6 +23,10 @@ import { Loader } from '../../ui/Loader'
 const leadProps = (l: { properties?: { id: number; name: string }[]; property?: { id: number; name: string } | null }) =>
   l.properties?.length ? l.properties : l.property ? [l.property] : []
 
+/** The website a lead came from ("RoomIndeed", "GharSaathi", a partner name). Leads added by hand in the app have none. */
+const sourceName = (l: { source?: string; source_name?: string | null }) =>
+  l.source_name ?? (l.source && l.source !== 'app' ? (l.source === 'roomindeed' ? 'RoomIndeed' : l.source) : null)
+
 export default function LeadsScreen() {
   const { t, colors, errText } = useSettings()
   const router = useRouter()
@@ -95,7 +99,7 @@ export default function LeadsScreen() {
                         ))}
                       </View>
                     ) : null}
-                    {l.source === 'roomindeed' ? <Badge label={t('fromRI')} tone="green" /> : null}
+                    {sourceName(l) ? <Badge label={t('fromSrc', { name: sourceName(l)! })} tone="green" /> : null}
                   </View>
                   <Badge label={t(st.key)} tone={st.tone} />
                 </View>

@@ -1,4 +1,4 @@
-import type { Property } from '../api/types'
+import type { LiveSite, Property } from '../api/types'
 
 type Lang = 'en' | 'hi'
 type Item = { key: string; en: string; hi: string }
@@ -108,3 +108,17 @@ export const propertyNames = (list: { name: string }[] | undefined | null, more:
   if (!list || list.length === 0) return ''
   return list.length === 1 ? list[0].name : `${list[0].name} ${more(list.length - 1)}`
 }
+
+/** "GharSaathi", "GharSaathi and RoomIndeed", "GharSaathi, RoomIndeed and RoomWala" */
+export const siteNames = (sites: LiveSite[] | undefined | null, and: string) => {
+  const names = (sites ?? []).map((x) => x.name)
+  if (names.length === 0) return 'GharSaathi'
+  if (names.length === 1) return names[0]
+  return `${names.slice(0, -1).join(', ')} ${and} ${names[names.length - 1]}`
+}
+
+/** The address "See live" opens. {q} = property name, {id} = property id. null = no website address saved yet. */
+export const siteUrl = (site: LiveSite, propertyName: string, propertyId?: number) =>
+  site.url_template
+    ? site.url_template.replace('{q}', encodeURIComponent(propertyName.trim())).replace('{id}', propertyId != null ? String(propertyId) : '')
+    : null

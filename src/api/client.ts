@@ -285,6 +285,7 @@ const ROUTES: [method: string, pattern: string, fn: string][] = [
   ['GET', '/complaints/:id', 'api_get_complaint'], ['PATCH', '/complaints/:id', 'api_update_complaint'],
 
   ['GET', '/app-config', 'api_app_config'],
+  ['GET', '/plans', 'api_plans'],
   ['GET', '/notices', 'api_get_notices'],
   ['GET', '/notifications', 'api_get_notifications'], ['POST', '/notifications/read', 'api_read_notifications'],
   ['PUT', '/push-pref', 'api_set_push_pref'],

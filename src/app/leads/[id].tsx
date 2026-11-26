@@ -21,6 +21,7 @@ import { LEAD_STATUSES, leadStatusLook } from '../../utils/leadStatus'
 import { Loader } from '../../ui/Loader'
 import { MultiSelectField } from '../../ui/MultiSelectField'
 import { useGetPropertiesQuery } from '../../store/api/properties'
+import { ShareLinkSheet } from '../../features/leads/ShareLinkSheet'
 
 const stamp = (iso: string) => {
   const d = new Date(iso)
@@ -39,6 +40,7 @@ function LeadForm({ lead }: { lead: Lead }) {
   const [nextDate, setNextDate] = useState(lead.next_action_at ?? '')
   const [status, setStatus] = useState<LeadStatus>(lead.status)
   const [tried, setTried] = useState(false)
+  const [sharing, setSharing] = useState(false)
 
   const shown = lead.properties?.length ? lead.properties : lead.property ? [lead.property] : []
   const talks = (lead.logs ?? []).filter((g) => g.kind === 'talk')
@@ -124,6 +126,7 @@ function LeadForm({ lead }: { lead: Lead }) {
       </Card>
 
       <Card>
+        <Button title={t('shareProp')} variant="ghost" onPress={() => setSharing(true)} style={{ marginBottom: 12 }} />
         <MultiSelectField
           label={t('leadProps')}
           hint={t('leadPropsH')}
@@ -153,6 +156,7 @@ function LeadForm({ lead }: { lead: Lead }) {
       </Card>
 
       <Button title={t('submitL')} onPress={submit} loading={busy} />
+      {sharing ? <ShareLinkSheet lead={lead} onClose={() => setSharing(false)} /> : null}
     </>
   )
 }

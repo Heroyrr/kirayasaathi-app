@@ -20,7 +20,7 @@ import { T } from '../../ui/AppText'
 import { TextField } from '../../ui/TextField'
 import { inr } from '../../utils/format'
 import { LocationStep } from '../../features/properties/LocationStep'
-import { AMENITIES, UNIT_TYPES, detailsMissing, listingLabel, listingMissing, locationBody, locationMissing, placeLine, type LocationForm } from '../../utils/listing'
+import { AMENITIES, UNIT_TYPES, detailsMissing, listingLabel, listingMissing, locationBody, locationMissing, placeLine, siteNames, type LocationForm } from '../../utils/listing'
 import { pinText } from '../../utils/location'
 import type { Key } from '../../i18n/strings'
 
@@ -28,7 +28,7 @@ const MAX_PHOTOS = 8
 const toggle = (list: string[], k: string) => (list.includes(k) ? list.filter((x) => x !== k) : [...list, k])
 
 /**
- * Going live on RoomIndeed, in 3 steps:
+ * Going live (GharSaathi and the partner websites), in 3 steps:
  *   1. Details   (photos, rent, deposit, type, amenities)
  *   2. Location  (pincode, city, locality, address, map pin) -> Confirm location
  *   3. Verify    (the owner sees everything) -> Verify and go live
@@ -42,6 +42,7 @@ function ListingForm({ p, toTop }: { p: PropertyDetail; toTop: () => void }) {
   const [uploadPhoto] = useUploadListingPhotoMutation()
   const [updateListing] = useUpdateListingMutation()
   const [setLive] = useSetLiveMutation()
+  const names = siteNames(p.live_sites, t('andW')) // "GharSaathi and RoomIndeed"
 
   // smallest category rent is the starting point for "minimum monthly rent"
   const lowestRent = p.categories.length ? Math.min(...p.categories.map((c) => c.rent)) : null
@@ -120,11 +121,11 @@ function ListingForm({ p, toTop }: { p: PropertyDetail; toTop: () => void }) {
 
   const confirmLive = async () => {
     const r = await run(() => setLive({ id: p.id, live: true }).unwrap())
-    if (r.ok) { Alert.alert(t('lstLiveDone'), undefined, undefined, { tone: 'success' }); router.back() }
+    if (r.ok) { Alert.alert(t('lstLiveDone', { names }), undefined, undefined, { tone: 'success' }); router.back() }
   }
 
   const goOffline = () =>
-    Alert.alert(t('takeOffline'), t('offlineQ'), [
+    Alert.alert(t('takeOffline'), t('offlineQ', { names }), [
       { text: t('cancel'), style: 'cancel' },
       { text: t('takeOffline'), style: 'destructive', onPress: async () => { const r = await run(() => setLive({ id: p.id, live: false }).unwrap()); if (r.ok) router.back() } },
     ])
@@ -163,7 +164,7 @@ function ListingForm({ p, toTop }: { p: PropertyDetail; toTop: () => void }) {
       <>
         <T w="semibold" size={13} color={colors.muted} style={{ marginBottom: 6 }}>{t('stepVerify')}</T>
         <T w="bold" size={15} style={{ marginBottom: 2 }}>{t('verifyT')}</T>
-        <T size={12.5} color={colors.muted} style={{ marginBottom: 10 }}>{t('verifyH')}</T>
+        <T size={12.5} color={colors.muted} style={{ marginBottom: 10 }}>{t('verifyH', { names })}</T>
 
         <Card>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
