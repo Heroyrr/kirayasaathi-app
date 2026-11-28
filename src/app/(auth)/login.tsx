@@ -1,43 +1,31 @@
 import React, { useState } from 'react'
-import { KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, View } from 'react-native'
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { Feather } from '@expo/vector-icons'
+import { AntDesign } from '@expo/vector-icons'
 import { useSettings } from '../../settings/SettingsProvider'
 import { useAuth } from '../../auth/AuthProvider'
-import { Button } from '../../ui/Button'
 import { Logo } from '../../ui/Logo'
 import { HeaderTools } from '../../ui/Screen'
 import { T } from '../../ui/AppText'
-import { TextField } from '../../ui/TextField'
-import { SUPPORT_WHATSAPP } from '../../utils/plans'
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
-
+// The only login is Google. A new owner gets a profile and the free plan (30-day trial) automatically.
 // The old phone + OTP login is kept in /later/login-otp.tsx for when SMS login is added.
 export default function Login() {
   const { t, colors, errText } = useSettings()
-  const { signIn } = useAuth()
+  const { signInWithGoogle } = useAuth()
   const insets = useSafeAreaInsets()
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [show, setShow] = useState(false)
-  const [tried, setTried] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  const emailErr = !EMAIL_RE.test(email.trim()) ? t('errEmail') : ''
-  const passErr = password.length === 0 ? t('errPass') : ''
-
-  async function submit() {
-    if (emailErr || passErr) { setTried(true); return }
+  async function google() {
     setBusy(true)
     setError('')
     try {
-      await signIn(email.trim(), password)
+      await signInWithGoogle()
       // the app moves to the tabs by itself when the login is saved
     } catch (e) {
-      setError(errText(e))
+      if ((e as { code?: string })?.code !== 'GOOGLE_CANCELLED') setError(errText(e))
       setBusy(false)
     }
   }
@@ -58,38 +46,20 @@ export default function Login() {
 
         <View style={{ flex: 1, marginTop: -22, borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: colors.bg, padding: 20, paddingBottom: insets.bottom + 20 }}>
           <T w="bold" size={17} style={{ marginBottom: 14 }}>{t('welcomeL')}</T>
-          <TextField
-            label={t('emailL')}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            placeholder="name@example.com"
-            error={tried ? emailErr : ''}
-          />
-          <TextField
-            label={t('passL')}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!show}
-            autoCapitalize="none"
-            autoCorrect={false}
-            error={tried ? passErr : ''}
-            right={
-              <Pressable onPress={() => setShow((v) => !v)} hitSlop={10} accessibilityLabel={show ? t('hidePw') : t('showPw')}>
-                <Feather name={show ? 'eye-off' : 'eye'} size={20} color={colors.muted} />
-              </Pressable>
-            }
-          />
-          {error ? <T size={13} color={colors.red} style={{ marginBottom: 10 }}>{error}</T> : null}
-          <Button title={t('loginBtn')} onPress={submit} loading={busy} />
           <Pressable
-            onPress={() => SUPPORT_WHATSAPP && Linking.openURL(`https://wa.me/${SUPPORT_WHATSAPP}`)}
-            style={{ alignItems: 'center', padding: 16 }}
+            onPress={busy ? undefined : google}
+            accessibilityRole="button"
+            style={({ pressed }) => ({
+              height: 50, borderRadius: 12, borderWidth: 1.5, borderColor: colors.line, backgroundColor: colors.card,
+              flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10,
+              opacity: busy ? 0.6 : pressed ? 0.85 : 1,
+            })}
           >
-            <T w="semibold" size={13.5} color={colors.pri}>{t('forgotPw')}</T>
+            {busy ? <ActivityIndicator color={colors.pri} /> : <AntDesign name="google" size={20} color="#DB4437" />}
+            <T w="semibold" size={15}>{t('googleBtn')}</T>
           </Pressable>
+          <T size={12.5} color={colors.muted} style={{ textAlign: 'center', marginTop: 10 }}>{t('googleNote')}</T>
+          {error ? <T size={13} color={colors.red} style={{ marginTop: 12, textAlign: 'center' }}>{error}</T> : null}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

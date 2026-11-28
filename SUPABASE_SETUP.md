@@ -4,28 +4,48 @@
 Supabase > SQL Editor > New query > paste `supabase/schema.sql` > Run.
 (Already ran an older version? Run only the missing parts in order: `04_update.sql`, `05_lead_history.sql`, `06_support.sql`, `07_email_admin.sql`, `08_notice_update.sql`, `09_roomindeed_live.sql`, `10_location.sql`, `11_free_plan_limits.sql`.)
 
-## 2. Login settings (Authentication > Sign In / Providers)
-- Email: turn ON. "Confirm email" can stay OFF.
-- "Allow new users to sign up": turn OFF. Only owners YOU create can log in.
+## 2. Login with Google (owners sign themselves up, no manual users)
+Run `supabase/21_google_signin.sql` once (SQL Editor). A new owner gets a profile and the FREE PLAN (30-day trial: 1 property, 10 units) on the first login.
 
-## 3. Create an owner
-Authentication > Users > Add user > Create new user: email + password, tick "Auto Confirm User".
-Give the owner the email, the password and the app link. On the first login the app creates the owner profile and a 30-day free trial.
+**a) Google Cloud Console** (https://console.cloud.google.com)
+1. Create / pick a project > APIs & Services > OAuth consent screen: User type External, app name KirayaSaathi, your support email. Add scopes `email`, `profile`, `openid`. Click Publish app (otherwise only test users can log in).
+2. APIs & Services > Credentials > Create credentials > OAuth client ID > Application type **Web application**.
+3. Authorised redirect URI: `https://zojaedvvdorfsnmwznnr.supabase.co/auth/v1/callback`
+   (Supabase > Authentication > Sign In / Providers > Google shows the exact URL to copy.)
+4. Copy the Client ID and Client Secret.
 
-## 4. Set the plan after they pay (SQL Editor)
+**b) Supabase** (Authentication)
+1. Sign In / Providers > Google: turn ON, paste Client ID and Client Secret, Save.
+2. Sign In / Providers: "Allow new users to sign up" must be **ON** (Google sign-up needs it).
+3. Email provider: turn it **OFF** (Google is the only login now, so nobody can sign up with a fake email).
+4. URL Configuration > Redirect URLs, add:
+   - `ownerapp://auth/callback`           (the installed app / APK)
+   - `ownerapp:///auth/callback`          (some phones send it with 3 slashes)
+   - `exp://**`                          (only for testing in Expo Go, remove later)
+   Site URL: `https://kirayasaathi.in` (your own website).
+   Only use a website you own: login codes are sent to the Site URL when a return address is not on the list.
+
+**c) App**
+    npx expo install expo-web-browser
+    npx expo start -c
+For an APK: `eas build -p android --profile preview` (the scheme `ownerapp` is already in app.json).
+
+The app has no email / password login any more. Google is the only way in.
+
+## 3. Set the plan after they pay (SQL Editor)
     select admin_set_plan('owner@example.com', 'starter', 'm', 30);   -- plan: basic | starter | growth | pro, cycle: m or y, days
     select admin_set_plan('owner@example.com', 'pro', 'y', 365);
 Block / unblock an owner:
     select admin_set_disabled('owner@example.com', true);
 Forgot password: Authentication > Users > the owner > send password reset, or set a new password.
 
-## 5. App
+## 4. App
     npx expo install expo-file-system        (used to name the invoice PDF, for example invoice-december.pdf)
     npm i @supabase/supabase-js react-native-url-polyfill
     npx expo install @react-native-async-storage/async-storage
 Put your Supabase URL, anon key and the team WhatsApp number in `.env` (and in `eas.json` for builds). Then `npx expo start -c`.
 
-## 6. Share an APK
+## 5. Share an APK
     eas build -p android --profile preview
 Share the link it prints.
 

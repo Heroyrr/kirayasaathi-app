@@ -13,6 +13,7 @@
         "EXPO_PUBLIC_SUPABASE_URL": "https://zojaedvvdorfsnmwznnr.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_7ajOLrCKPVQaWwzRN4bt1w_AgVsgxn7",
         "EXPO_PUBLIC_SUPPORT_WHATSAPP": "918127804218",
+        "EXPO_PUBLIC_WEBSITE_URL": "https://kirayasaathi.in",
         "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "AIzaSyAXQhn9MyUStmO3LUecQISCDgKQ6TaDJMc"
       },
       "autoIncrement": true
@@ -26,6 +27,7 @@
         "EXPO_PUBLIC_SUPABASE_URL": "https://zojaedvvdorfsnmwznnr.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_7ajOLrCKPVQaWwzRN4bt1w_AgVsgxn7",
         "EXPO_PUBLIC_SUPPORT_WHATSAPP": "918127804218",
+        "EXPO_PUBLIC_WEBSITE_URL": "https://kirayasaathi.in",
         "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "AIzaSyAXQhn9MyUStmO3LUecQISCDgKQ6TaDJMc"
       }
     },
@@ -38,6 +40,7 @@
         "EXPO_PUBLIC_SUPABASE_URL": "https://zojaedvvdorfsnmwznnr.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_7ajOLrCKPVQaWwzRN4bt1w_AgVsgxn7",
         "EXPO_PUBLIC_SUPPORT_WHATSAPP": "918127804218",
+        "EXPO_PUBLIC_WEBSITE_URL": "https://kirayasaathi.in",
         "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "AIzaSyAXQhn9MyUStmO3LUecQISCDgKQ6TaDJMc"
       }
     }

@@ -22,7 +22,7 @@ const INDIA = { lat: 22.5, lng: 79.0, zoom: 4 }
 
 const GOOGLE_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_KEY ?? ''
 // The WebView tells Google which website is asking. Put the same address in the key's "HTTP referrers" restriction.
-const MAP_BASE_URL = 'https://kirayasaathi.app'
+const MAP_BASE_URL = 'https://kirayasaathi.in'
 
 function buildHtml(initial: Pin | null) {
   const start = initial ? { lat: initial.lat, lng: initial.lng, zoom: 17, has: true } : { ...INDIA, has: false }

@@ -11,7 +11,8 @@ type Ctx = {
   subscription: Subscription | null
   sendOtp: (phone: string) => Promise<{ is_new: boolean; dev_otp?: string }>
   verifyOtp: (phone: string, otp: string, name?: string) => Promise<void>
-  signIn: (email: string, password: string) => Promise<void>
+  signInWithGoogle: () => Promise<void>
+  finishGoogleCode: (code: string) => Promise<void>
   logout: () => Promise<void>
   refreshMe: () => Promise<void>
 }
@@ -81,19 +82,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setStatus('in')
   }
 
-  // email + password login (the admin creates the owner's login)
-  const signIn: Ctx['signIn'] = async (email, password) => {
-    const res = await api<{ token: string; user: User; subscription: Subscription }>('/auth/login', {
-      method: 'POST',
-      body: { email, password },
-      auth: false,
-    })
+  const saveLogin = async (res: { token: string; user: User; subscription: Subscription }) => {
     setToken(res.token)
     await appStorage.set('oa_token', res.token)
     await appStorage.set('oa_user', JSON.stringify(res.user))
     setUser(res.user)
     setSub(res.subscription)
     setStatus('in')
+  }
+
+  // Google login: a new owner gets the free plan automatically
+  const signInWithGoogle: Ctx['signInWithGoogle'] = async () => {
+    await saveLogin(await api('/auth/google', { method: 'POST', auth: false }))
+  }
+
+  // Google brought the owner back to the app with a code (used by the /auth/callback screen)
+  const finishGoogleCode: Ctx['finishGoogleCode'] = async (code) => {
+    await saveLogin(await api('/auth/google-code', { method: 'POST', body: { code }, auth: false }))
   }
 
   const logout = async () => {
@@ -110,7 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const value = useMemo(
-    () => ({ status, user, subscription, sendOtp, verifyOtp, signIn, logout, refreshMe }),
+    () => ({ status, user, subscription, sendOtp, verifyOtp, signInWithGoogle, finishGoogleCode, logout, refreshMe }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [status, user, subscription]
   )

@@ -30,6 +30,7 @@ export const supabase = createClient(url || 'http://localhost', anonKey || 'miss
     autoRefreshToken: !onServer,
     persistSession: !onServer,
     detectSessionInUrl: false,
+    flowType: 'pkce', // needed for Google sign-in (the app gets a one-time code, then swaps it for the session)
   },
 })
 

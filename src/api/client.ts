@@ -8,6 +8,9 @@
 |   - files            -> private Supabase Storage bucket "files"
 | Every failure becomes an ApiError with message, status and code, like before.
 */
+import { Platform } from 'react-native'
+import * as Linking from 'expo-linking'
+import * as WebBrowser from 'expo-web-browser'
 import { supabase } from './supabase'
 import { base64ToBytes } from '../utils/base64'
 import { dropBase64, takeBase64 } from '../utils/pickImage'
@@ -157,26 +160,52 @@ async function verifyOtp(body: any) {
   }
 }
 
-/** Owner login with the email and password the admin created */
-async function loginPassword(body: any) {
-  const email = String(body?.email ?? '').trim().toLowerCase()
-  const password = String(body?.password ?? '')
-  const { data, error } = await timeout(supabase.auth.signInWithPassword({ email, password }))
-  if (error || !data.session) {
-    const e = error ?? { message: 'Login failed', status: 400 }
-    const status = (e as any).status ?? 0
-    if (status === 0 || /network request failed|failed to fetch|retryable/i.test(e.message)) throw new ApiError('Cannot reach the server', 0, 'NETWORK')
-    if (status === 429) throw new ApiError(e.message, 429, 'LOGIN_TOO_MANY')
-    throw new ApiError(e.message, status || 400, 'LOGIN_INVALID')
+/** Google sign-in. Opens Google in the phone's browser; Supabase brings the owner back to the app with a one-time code.
+ *  The first time, api_bootstrap makes the owner profile and the free plan (30-day trial). */
+async function loginGoogle() {
+  const redirectTo = Platform.OS === 'web' ? `${window.location.origin}/auth/callback` : Linking.createURL('auth/callback')
+  const start = await timeout(
+    supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo, skipBrowserRedirect: true, queryParams: { prompt: 'select_account' } },
+    })
+  )
+  if (start.error || !start.data?.url) throw authFail(start.error ?? { message: 'Google sign-in could not start' }, 'send')
+
+  // no timeout here: the owner may take a while to pick an account
+  const result = await WebBrowser.openAuthSessionAsync(start.data.url, redirectTo)
+  if (result.type !== 'success' || !result.url) throw new ApiError('Google sign-in cancelled', 0, 'GOOGLE_CANCELLED')
+
+  const back = new URL(result.url)
+  const hash = new URLSearchParams(back.hash.replace(/^#/, ''))
+  const reason = back.searchParams.get('error_description') ?? hash.get('error_description')
+  if (reason) throw new ApiError(reason.replace(/\+/g, ' '), 400, 'GOOGLE_FAILED')
+  const code = back.searchParams.get('code')
+  if (!code) throw new ApiError('Google sign-in failed. Please try again.', 400, 'GOOGLE_FAILED')
+
+  return finishGoogle(code)
+}
+
+// A one-time code can be used only once. The login screen and the callback screen can both see it,
+// so the first caller does the work and the second one gets the same result.
+const exchanging = new Map<string, Promise<{ token: string; user: unknown; subscription: unknown }>>()
+function finishGoogle(code: string) {
+  let job = exchanging.get(code)
+  if (!job) {
+    job = (async () => {
+      const { data, error } = await timeout(supabase.auth.exchangeCodeForSession(code))
+      if (error || !data.session) throw authFail(error ?? { message: 'Google sign-in failed' }, 'verify')
+      try {
+        const boot = await rpc<{ user: unknown; subscription: unknown }>('api_bootstrap', {})
+        return { token: data.session.access_token, user: boot.user, subscription: boot.subscription }
+      } catch (err) {
+        await supabase.auth.signOut().catch(() => {}) // e.g. ACCOUNT_DISABLED
+        throw err
+      }
+    })()
+    exchanging.set(code, job)
   }
-  try {
-    // makes the owner profile on the first login (the admin only creates the login)
-    const boot = await rpc<{ user: unknown; subscription: unknown }>('api_bootstrap', {})
-    return { token: data.session.access_token, user: boot.user, subscription: boot.subscription }
-  } catch (err) {
-    await supabase.auth.signOut().catch(() => {})
-    throw err
-  }
+  return job
 }
 
 async function requireSession() {
@@ -285,7 +314,7 @@ const ROUTES: [method: string, pattern: string, fn: string][] = [
   ['GET', '/complaints/:id', 'api_get_complaint'], ['PATCH', '/complaints/:id', 'api_update_complaint'],
 
   ['GET', '/app-config', 'api_app_config'],
-  ['GET', '/plans', 'api_plans'],
+  ['GET', '/plans', 'api_plans'], ['POST', '/plans/checkout', 'api_plan_checkout'],
   ['GET', '/notices', 'api_get_notices'],
   ['GET', '/notifications', 'api_get_notifications'], ['POST', '/notifications/read', 'api_read_notifications'],
   ['PUT', '/push-pref', 'api_set_push_pref'],
@@ -315,7 +344,8 @@ export async function api<T = any>(path: string, opts: Opts = {}): Promise<T> {
   // login (no session yet)
   if (path === '/auth/send-otp' && m === 'POST') return (await sendOtp(body)) as T
   if (path === '/auth/verify-otp' && m === 'POST') return (await verifyOtp(body)) as T
-  if (path === '/auth/login' && m === 'POST') return (await loginPassword(body)) as T
+  if (path === '/auth/google' && m === 'POST') return (await loginGoogle()) as T
+  if (path === '/auth/google-code' && m === 'POST') return (await finishGoogle(String((body as any)?.code ?? ''))) as T
   if (path === '/auth/logout' && m === 'POST') { await supabase.auth.signOut().catch(() => {}); return { ok: true } as T }
 
   // everything below needs a saved login
